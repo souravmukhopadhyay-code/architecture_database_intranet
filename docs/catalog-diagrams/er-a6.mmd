@@ -1,0 +1,118 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_course_equivalence["academic.course_equivalence"] {
+    uuid course_id PK, FK "→ course"
+    uuid equivalent_course_id PK, FK "→ course"
+    uuid approved_by_employee_id FK "→ people.employee"
+    date approved_on
+    uuid body_resolution_id FK "→ body_resolution; optional"
+  }
+  t_award_rule["academic.award_rule"] {
+    uuid id PK
+    uuid curriculum_id FK, UK "→ curriculum; → curriculum_pathway"
+    int award_type_id FK, UK "→ ref.award_type"
+    text award_title
+    int after_term_no
+    numeric min_credits
+    int reentry_within_years "optional"
+    uuid pathway_id FK "→ curriculum_pathway; optional"
+  }
+  t_award_rule_course["academic.award_rule_course"] {
+    uuid award_rule_id PK, FK
+    uuid course_id PK, FK "→ course"
+  }
+  t_student_award["academic.student_award"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid award_rule_id FK
+    date conferred_on
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_enrollment_reentry["academic.enrollment_reentry"] {
+    uuid student_enrollment_id PK, FK "→ student_enrollment"
+    uuid student_award_id FK, UK
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_external_provider["academic.external_provider"] {
+    uuid id PK
+    text code UK
+    text name
+    int external_provider_type_id FK "→ ref.external_provider_type"
+    int country_id FK "→ ref.country; optional"
+    text aishe_code UK "optional"
+    bool is_active
+  }
+  t_external_course["academic.external_course"] {
+    uuid id PK
+    uuid external_provider_id FK, UK
+    text code UK
+    text title
+    numeric credits
+    int duration_weeks "optional"
+    bool is_active
+  }
+  t_external_course_mapping["academic.external_course_mapping"] {
+    uuid id PK
+    uuid external_course_id FK
+    uuid course_id FK "→ course; optional"
+    int course_category_id FK "→ ref.course_category; optional"
+    daterange valid
+    uuid approved_by_employee_id FK "→ people.employee"
+    uuid body_resolution_id FK "→ body_resolution; optional"
+  }
+  t_credit_transfer["academic.credit_transfer"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid external_course_id FK, UK
+    date completed_on
+    numeric grade_point "optional"
+    text abc_reference UK "optional"
+    uuid certificate_file_id FK, UK "→ people.file_object; optional"
+    int credit_transfer_status_id FK "→ ref.credit_transfer_status"
+    uuid decided_by_employee_id FK "→ people.employee; optional"
+    timestamp decided_at "optional"
+  }
+  t_track["academic.track"] {
+    uuid id PK
+    text code UK
+    text name
+    int track_type_id FK "→ ref.track_type"
+    uuid offering_org_unit_id FK "→ org.org_unit"
+    uuid program_id FK "→ program; optional"
+    numeric min_credits
+    numeric min_cgpa_to_join "optional"
+    bool counts_in_cgpa
+    bool is_active
+  }
+  t_track_course["academic.track_course"] {
+    uuid track_id PK, FK
+    uuid course_id PK, FK "→ course"
+    int course_category_id FK "→ ref.course_category"
+    int evaluation_scheme_id FK "→ evaluation_scheme"
+  }
+  t_student_track["academic.student_track"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ student_enrollment"
+    uuid track_id FK
+    daterange valid
+  }
+  t_award_rule ||--o{ t_award_rule_course : "award_rule_id"
+  t_external_course ||--o{ t_credit_transfer : "external_course_id"
+  t_student_award ||--o| t_enrollment_reentry : "student_award_id"
+  t_external_provider ||--o{ t_external_course : "external_provider_id"
+  t_external_course ||--o{ t_external_course_mapping : "external_course_id"
+  t_award_rule ||--o{ t_student_award : "award_rule_id"
+  t_track ||--o{ t_student_track : "track_id"
+  t_track ||--o{ t_track_course : "track_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

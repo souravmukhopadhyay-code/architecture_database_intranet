@@ -1,0 +1,89 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_supervision_norm["research.supervision_norm"] {
+    uuid id PK
+    int designation_id FK "→ people.designation"
+    int max_scholars
+    daterange valid
+  }
+  t_supervisor_allocation["research.supervisor_allocation"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ academic.student_enrollment"
+    int supervisor_role_id FK "→ ref.supervisor_role"
+    uuid employee_id FK "→ people.employee; optional"
+    uuid external_person_id FK "→ people.person; optional"
+    daterange valid
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_advisory_committee["research.advisory_committee"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ academic.student_enrollment"
+    date constituted_on
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_advisory_committee_member["research.advisory_committee_member"] {
+    uuid id PK
+    uuid advisory_committee_id FK
+    int committee_role_id FK "→ ref.committee_role"
+    uuid employee_id FK "→ people.employee; optional"
+    uuid external_person_id FK "→ people.person; optional"
+    daterange valid
+  }
+  t_progress_review["research.progress_review"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ academic.student_enrollment"
+    int review_no UK
+    date held_on
+    int progress_review_outcome_id FK "→ ref.progress_review_outcome"
+    text remarks "optional"
+  }
+  t_thesis["research.thesis"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ academic.student_enrollment"
+    text title
+    int thesis_status_id FK "→ ref.thesis_status"
+    date topic_approved_on "optional"
+    date synopsis_submitted_on "optional"
+    date synopsis_approved_on "optional"
+    date thesis_submitted_on "optional"
+    numeric similarity_pct "optional"
+    uuid synopsis_file_id FK "→ people.file_object; optional"
+    uuid thesis_file_id FK "→ people.file_object; optional"
+  }
+  t_thesis_examiner["research.thesis_examiner"] {
+    uuid id PK
+    uuid thesis_id FK, UK
+    int thesis_examiner_role_id FK "→ ref.thesis_examiner_role"
+    uuid employee_id FK, UK "→ people.employee; optional"
+    uuid external_person_id FK, UK "→ people.person; optional"
+    date appointed_on
+    date report_received_on "optional"
+    int examiner_recommendation_id FK "→ ref.examiner_recommendation; optional"
+    uuid report_file_id FK "→ people.file_object; optional"
+  }
+  t_viva["research.viva"] {
+    uuid id PK
+    uuid thesis_id FK, UK
+    date held_on
+    time start_time "optional"
+    time end_time "optional"
+    uuid room_id FK "→ org.room; optional"
+    int examiner_recommendation_id FK "→ ref.examiner_recommendation"
+    text remarks "optional"
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_advisory_committee ||--o{ t_advisory_committee_member : "advisory_committee_id"
+  t_thesis ||--o{ t_thesis_examiner : "thesis_id"
+  t_thesis ||--o| t_viva : "thesis_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

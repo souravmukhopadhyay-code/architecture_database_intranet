@@ -1,0 +1,53 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_academic_body["academic.academic_body"] {
+    uuid id PK
+    int academic_body_type_id FK, UK "→ ref.academic_body_type"
+    uuid org_unit_id FK, UK "→ org.org_unit"
+    text name
+    int quorum
+    bool is_active
+  }
+  t_academic_body_member["academic.academic_body_member"] {
+    uuid id PK
+    uuid academic_body_id FK
+    int committee_role_id FK "→ ref.committee_role"
+    uuid employee_id FK "→ people.employee; optional"
+    uuid external_person_id FK "→ people.person; optional"
+    daterange valid
+  }
+  t_body_meeting["academic.body_meeting"] {
+    uuid id PK
+    uuid academic_body_id FK, UK
+    text meeting_no UK
+    date held_on
+    uuid minutes_file_id FK "→ people.file_object; optional"
+  }
+  t_body_meeting_attendee["academic.body_meeting_attendee"] {
+    uuid body_meeting_id PK, FK
+    uuid academic_body_member_id PK, FK
+  }
+  t_body_resolution["academic.body_resolution"] {
+    uuid id PK
+    uuid body_meeting_id FK, UK
+    text resolution_no UK
+    text subject
+    text decision
+  }
+  t_academic_body ||--o{ t_academic_body_member : "academic_body_id"
+  t_academic_body ||--o{ t_body_meeting : "academic_body_id"
+  t_academic_body_member ||--o{ t_body_meeting_attendee : "academic_body_member_id"
+  t_body_meeting ||--o{ t_body_meeting_attendee : "body_meeting_id"
+  t_body_meeting ||--o{ t_body_resolution : "body_meeting_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,74 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+flowchart LR
+  org["<b>org</b><br/>organisation<br/>12 tables"]:::core
+  people["<b>people</b><br/>persons & roles<br/>9 tables"]:::core
+  academic["<b>academic</b><br/>programmes → attendance<br/>97 tables"]:::dom
+  exam["<b>exam</b><br/>examination & results<br/>32 tables"]:::dom
+  research["<b>research</b><br/>research degrees<br/>8 tables"]:::dom
+  facility["<b>facility</b><br/>rooms, bookings, assets, fleet<br/>41 tables"]:::dom
+  tms["<b>tms</b><br/>helpdesk tickets & SLA<br/>24 tables"]:::dom
+  events["<b>events</b><br/>clubs, events, registrations<br/>74 tables"]:::dom
+  pii["<b>pii</b><br/>restricted personal data<br/>7 tables"]:::sec
+  iam["<b>iam</b><br/>accounts & sessions<br/>13 tables"]:::sec
+  authz["<b>authz</b><br/>roles & permissions<br/>13 tables"]:::dom
+  wf["<b>wf</b><br/>approval workflow<br/>14 tables"]:::dom
+  privacy["<b>privacy</b><br/>DPDP controls<br/>17 tables"]:::sec
+  audit["<b>audit</b><br/>change trail<br/>2 tables"]:::sec
+  facility -->|"39 FK"| org
+  academic -->|"37 FK"| people
+  events -->|"34 FK"| people
+  events -->|"33 FK"| iam
+  exam -->|"30 FK"| people
+  exam -->|"20 FK"| academic
+  facility -->|"18 FK"| people
+  facility -->|"18 FK"| iam
+  wf -->|"14 FK"| iam
+  research -->|"13 FK"| people
+  privacy -->|"11 FK"| people
+  academic -->|"10 FK"| org
+  tms -->|"9 FK"| iam
+  tms -->|"8 FK"| people
+  pii -->|"7 FK"| people
+  tms -->|"7 FK"| org
+  events -->|"6 FK"| org
+  wf -->|"6 FK"| org
+  events -->|"5 FK"| wf
+  tms -->|"5 FK"| academic
+  wf -->|"5 FK"| authz
+  authz -->|"4 FK"| iam
+  facility -->|"4 FK"| wf
+  iam -->|"4 FK"| pii
+  research -->|"4 FK"| academic
+  authz -->|"3 FK"| org
+  events -->|"3 FK"| academic
+  privacy -->|"3 FK"| iam
+  wf -->|"3 FK"| people
+  academic -->|"2 FK"| wf
+  events -->|"2 FK"| facility
+  exam -->|"2 FK"| org
+  facility -->|"2 FK"| academic
+  facility -->|"2 FK"| exam
+  authz -->|"1 FK"| people
+  exam -->|"1 FK"| wf
+  facility -->|"1 FK"| pii
+  facility -->|"1 FK"| research
+  facility -->|"1 FK"| authz
+  iam -->|"1 FK"| people
+  org -->|"1 FK"| people
+  people -->|"1 FK"| org
+  research -->|"1 FK"| org
+  tms -->|"1 FK"| pii
+  wf -->|"1 FK"| academic
+  classDef core fill:#fff6d6,stroke:#a16207,stroke-width:2px,color:#3b2a00
+  classDef dom fill:#eef4ff,stroke:#1d4ed8,stroke-width:1.5px,color:#0b1b4a
+  classDef sec fill:#fdecec,stroke:#b91c1c,stroke-width:1.5px,color:#450a0a

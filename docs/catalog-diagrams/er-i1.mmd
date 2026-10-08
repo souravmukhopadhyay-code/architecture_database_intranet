@@ -1,0 +1,139 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_user_account["iam.user_account"]:::hub {
+    uuid id PK
+    uuid person_id FK, UK "→ people.person"
+    text username UK
+    text password
+    int account_status_id FK "→ ref.account_status"
+    bool is_superuser
+  }
+  t_password_history["iam.password_history"] {
+    bigint id PK
+    uuid account_id FK
+    text password_hash
+    timestamp set_at
+    timestamp replaced_at
+  }
+  t_password_reset_token["iam.password_reset_token"] {
+    uuid id PK
+    uuid account_id FK
+    bytes token_hash UK
+    inet requested_ip "optional"
+    timestamp expires_at
+    timestamp used_at "optional"
+  }
+  t_mfa_factor["iam.mfa_factor"]:::hub {
+    uuid id PK
+    uuid account_id FK
+    int mfa_factor_type_id FK "→ ref.mfa_factor_type"
+    text label
+    bool is_default
+    timestamp confirmed_at "optional"
+  }
+  t_mfa_totp["iam.mfa_totp"] {
+    uuid factor_id PK, FK
+    bytes secret_ciphertext
+    int digits
+    int period_seconds
+  }
+  t_mfa_webauthn["iam.mfa_webauthn"] {
+    uuid factor_id PK, FK
+    bytes credential_id UK
+    bytes public_key
+    uuid aaguid "optional"
+    bigint sign_count
+  }
+  t_mfa_otp_channel["iam.mfa_otp_channel"] {
+    uuid factor_id PK, FK
+    uuid person_email_id FK "→ pii.person_email; optional"
+    uuid person_phone_id FK "→ pii.person_phone; optional"
+  }
+  t_mfa_recovery_code["iam.mfa_recovery_code"] {
+    bigint id PK
+    uuid account_id FK, UK
+    bytes code_hash UK
+    timestamp used_at "optional"
+  }
+  t_otp_challenge["iam.otp_challenge"] {
+    uuid id PK
+    uuid account_id FK "optional"
+    int otp_purpose_id FK "→ ref.otp_purpose"
+    uuid mfa_factor_id FK "optional"
+    uuid person_email_id FK "→ pii.person_email; optional"
+    uuid person_phone_id FK "→ pii.person_phone; optional"
+    bytes code_hash
+    int attempt_count
+    timestamp expires_at
+    timestamp consumed_at "optional"
+  }
+  t_user_device["iam.user_device"] {
+    uuid id PK
+    uuid account_id FK, UK
+    bytes fingerprint_hash UK
+    text name "optional"
+    text user_agent "optional"
+    timestamp first_seen_at
+    timestamp trusted_until "optional"
+  }
+  t_user_session["iam.user_session"] {
+    uuid id PK
+    uuid account_id FK
+    uuid device_id FK "optional"
+    uuid family_id
+    bytes refresh_token_hash UK
+    inet ip "optional"
+    timestamp mfa_verified_at "optional"
+    timestamp expires_at
+    timestamp revoked_at "optional"
+    int session_revoke_reason_id FK "→ ref.session_revoke_reason; optional"
+  }
+  t_account_lockout["iam.account_lockout"] {
+    uuid id PK
+    uuid account_id FK
+    int lockout_reason_id FK "→ ref.lockout_reason"
+    tsrange period
+    timestamp released_at "optional"
+    uuid released_by_account_id FK "optional"
+  }
+  t_auth_event["iam.auth_event"] {
+    bigint id PK
+    timestamp occurred_at PK
+    uuid account_id FK "optional"
+    int auth_event_type_id FK "→ ref.auth_event_type"
+    int auth_failure_reason_id FK "→ ref.auth_failure_reason; optional"
+    bytes identifier_hmac "optional"
+    uuid session_id FK "optional"
+    uuid mfa_factor_id FK "optional"
+    inet ip "optional"
+    text user_agent "optional"
+  }
+  t_user_account ||--o{ t_account_lockout : "account_id"
+  t_user_account |o--o{ t_account_lockout : "released_by_account_id"
+  t_user_account |o--o{ t_auth_event : "account_id"
+  t_mfa_factor |o--o{ t_auth_event : "mfa_factor_id"
+  t_user_session |o--o{ t_auth_event : "session_id"
+  t_user_account ||--o{ t_mfa_factor : "account_id"
+  t_mfa_factor ||--o| t_mfa_otp_channel : "factor_id"
+  t_user_account ||--o{ t_mfa_recovery_code : "account_id"
+  t_mfa_factor ||--o| t_mfa_totp : "factor_id"
+  t_mfa_factor ||--o| t_mfa_webauthn : "factor_id"
+  t_user_account |o--o{ t_otp_challenge : "account_id"
+  t_mfa_factor |o--o{ t_otp_challenge : "mfa_factor_id"
+  t_user_account ||--o{ t_password_history : "account_id"
+  t_user_account ||--o{ t_password_reset_token : "account_id"
+  t_user_account ||--o{ t_user_device : "account_id"
+  t_user_account ||--o{ t_user_session : "account_id"
+  t_user_device |o--o{ t_user_session : "device_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

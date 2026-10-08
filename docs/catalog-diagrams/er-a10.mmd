@@ -1,0 +1,53 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_feedback_questionnaire["academic.feedback_questionnaire"] {
+    int id PK
+    text code UK
+    text name
+    int max_rating
+    bool is_active
+  }
+  t_feedback_question["academic.feedback_question"] {
+    int id PK
+    int feedback_questionnaire_id FK, UK
+    int seq UK
+    text question
+    bool is_free_text
+  }
+  t_feedback_cycle["academic.feedback_cycle"] {
+    uuid id PK
+    uuid academic_term_id FK, UK "→ academic_term"
+    int feedback_questionnaire_id FK
+    text name UK
+    tsrange submission_window
+  }
+  t_feedback_submission["academic.feedback_submission"] {
+    uuid feedback_cycle_id PK, FK
+    uuid course_registration_id PK, FK "→ course_registration"
+    timestamp submitted_at
+  }
+  t_feedback_response["academic.feedback_response"] {
+    bigint id PK
+    uuid feedback_cycle_id FK
+    uuid teaching_assignment_id FK "→ teaching_assignment"
+    int feedback_question_id FK
+    int rating "optional"
+    text comment "optional"
+  }
+  t_feedback_questionnaire ||--o{ t_feedback_cycle : "feedback_questionnaire_id"
+  t_feedback_questionnaire ||--o{ t_feedback_question : "feedback_questionnaire_id"
+  t_feedback_cycle ||--o{ t_feedback_response : "feedback_cycle_id"
+  t_feedback_question ||--o{ t_feedback_response : "feedback_question_id"
+  t_feedback_cycle ||--o{ t_feedback_submission : "feedback_cycle_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

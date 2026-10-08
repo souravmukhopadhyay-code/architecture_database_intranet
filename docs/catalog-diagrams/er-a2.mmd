@@ -1,0 +1,81 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_grade_scale["academic.grade_scale"] {
+    int id PK
+    text code UK
+    text name
+    numeric max_grade_point
+    numeric pct_conversion_factor "optional"
+    bool is_relative
+    int relative_min_cohort "optional"
+    bool is_active
+  }
+  t_grade_band["academic.grade_band"] {
+    int id PK
+    int grade_scale_id FK, UK
+    text grade_letter UK
+    numrange pct_range
+    numeric grade_point
+    bool is_pass
+  }
+  t_relative_grade_cutoff["academic.relative_grade_cutoff"] {
+    int grade_band_id PK, FK
+    numeric min_percentile
+  }
+  t_division_band["academic.division_band"] {
+    int id PK
+    int grade_scale_id FK, UK
+    text code UK
+    text label
+    numrange cgpa_range
+  }
+  t_evaluation_scheme["academic.evaluation_scheme"]:::hub {
+    int id PK
+    text code UK
+    text name
+    numeric min_aggregate_pct
+    numeric max_internal_lead_pct "optional"
+    numeric round_to_step "optional"
+    bool round_up
+    bool is_active
+  }
+  t_evaluation_component_group["academic.evaluation_component_group"] {
+    int id PK
+    int evaluation_scheme_id FK, UK
+    text name UK
+    int best_of
+  }
+  t_evaluation_component["academic.evaluation_component"] {
+    int id PK
+    int evaluation_scheme_id FK, UK
+    int assessment_type_id FK "→ ref.assessment_type"
+    text name UK
+    numeric weight_pct
+    numeric max_marks
+    numeric min_pass_marks "optional"
+    int component_group_id FK "optional"
+  }
+  t_evaluation_part_rule["academic.evaluation_part_rule"] {
+    int evaluation_scheme_id PK, FK
+    int evaluation_part_id PK, FK "→ ref.evaluation_part"
+    numeric min_pass_pct
+  }
+  t_grade_scale ||--o{ t_division_band : "grade_scale_id"
+  t_evaluation_scheme ||--o{ t_evaluation_component : "evaluation_scheme_id"
+  t_evaluation_component_group |o--o{ t_evaluation_component : "evaluation_scheme_id, component_group_id"
+  t_evaluation_scheme ||--o{ t_evaluation_component_group : "evaluation_scheme_id"
+  t_evaluation_scheme ||--o{ t_evaluation_part_rule : "evaluation_scheme_id"
+  t_grade_scale ||--o{ t_grade_band : "grade_scale_id"
+  t_grade_band ||--o| t_relative_grade_cutoff : "grade_band_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

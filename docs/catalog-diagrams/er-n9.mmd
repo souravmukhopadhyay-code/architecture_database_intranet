@@ -1,0 +1,95 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_event_stall_fee["events.event_stall_fee"] {
+    uuid event_id PK, FK "→ event"
+    int stall_category_id PK, FK "→ ref.stall_category"
+    numeric fee
+  }
+  t_stall_application["events.stall_application"]:::hub {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    uuid applicant_person_id FK, UK "→ people.person"
+    text stall_name
+    int stall_type_id FK "→ ref.stall_type"
+    int stall_category_id FK "→ ref.stall_category"
+    text description "optional"
+    text business_name "optional"
+    bool is_selling
+    numrange price_range "optional"
+    int stall_size_id FK "→ ref.stall_size"
+    text custom_size "optional"
+    bool electricity_required
+    int additional_power_watts "optional"
+    bool table_required
+    int chairs_count
+    text special_setup_other "optional"
+    timestamp declarations_accepted_at
+    timestamp applied_at
+    timestamp decided_at "optional"
+    uuid decided_by_account_id FK "→ iam.user_account; optional"
+    bool is_approved "optional"
+    text rejection_reason "optional"
+  }
+  t_stall_application_setup["events.stall_application_setup"] {
+    uuid stall_application_id PK, FK
+    int stall_setup_id PK, FK "→ ref.stall_setup"
+  }
+  t_stall_application_document["events.stall_application_document"] {
+    uuid id PK
+    uuid stall_application_id FK, UK
+    uuid file_object_id FK, UK "→ people.file_object"
+  }
+  t_event_stall["events.event_stall"] {
+    uuid id PK
+    uuid event_id FK "→ event"
+    text stall_code UK
+    text stall_name "optional"
+    int stall_type_id FK "→ ref.stall_type; optional"
+    int stall_category_id FK "→ ref.stall_category; optional"
+    text description "optional"
+    text business_name "optional"
+    uuid owner_person_id FK "→ people.person; optional"
+    int stall_size_id FK "→ ref.stall_size; optional"
+    text custom_size "optional"
+    text location "optional"
+    bool electricity_required
+    bool water_required
+    text special_requirements "optional"
+    uuid stall_application_id FK, UK "optional"
+    bool is_active
+    uuid created_by_account_id FK "→ iam.user_account"
+  }
+  t_event_stall_product["events.event_stall_product"] {
+    uuid id PK
+    uuid event_stall_id FK, UK
+    text name UK
+  }
+  t_stall_feedback["events.stall_feedback"] {
+    uuid id PK
+    uuid event_stall_id FK
+    text comment "optional"
+    date submitted_on
+  }
+  t_stall_feedback_point["events.stall_feedback_point"] {
+    uuid stall_feedback_id PK, FK
+    int point_no PK
+    int score
+  }
+  t_stall_application |o--o| t_event_stall : "stall_application_id"
+  t_event_stall ||--o{ t_event_stall_product : "event_stall_id"
+  t_stall_application ||--o{ t_stall_application_document : "stall_application_id"
+  t_stall_application ||--o{ t_stall_application_setup : "stall_application_id"
+  t_event_stall ||--o{ t_stall_feedback : "event_stall_id"
+  t_stall_feedback ||--o{ t_stall_feedback_point : "stall_feedback_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,90 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_processing_purpose["privacy.processing_purpose"]:::hub {
+    int id PK
+    text code UK
+    text label
+    text description
+    int legal_basis_id FK "→ ref.legal_basis"
+    interval retention_period
+    bool is_active
+  }
+  t_purpose_data_category["privacy.purpose_data_category"] {
+    int purpose_id PK, FK
+    int data_category_id PK, FK "→ ref.data_category"
+  }
+  t_data_element["privacy.data_element"] {
+    int id PK
+    name schema_name UK
+    name table_name UK
+    name column_name UK
+    int data_category_id FK "→ ref.data_category"
+    int erasure_action_id FK "→ ref.erasure_action"
+  }
+  t_privacy_notice["privacy.privacy_notice"] {
+    uuid id PK
+    text version UK
+    int language_id FK, UK "→ ref.language"
+    bytes content_sha256
+    uuid file_object_id FK "→ people.file_object; optional"
+    timestamp published_at "optional"
+    timestamp retired_at "optional"
+  }
+  t_notice_purpose["privacy.notice_purpose"] {
+    uuid notice_id PK, FK
+    int purpose_id PK, FK
+  }
+  t_data_processor["privacy.data_processor"] {
+    uuid id PK
+    text name UK
+    int country_id FK "→ ref.country"
+    date dpa_signed_on "optional"
+    bool is_active
+  }
+  t_processor_purpose["privacy.processor_purpose"] {
+    uuid processor_id PK, FK
+    int purpose_id PK, FK
+  }
+  t_consent["privacy.consent"] {
+    uuid id PK
+    uuid principal_person_id FK "→ people.person"
+    uuid notice_id FK
+    int purpose_id FK
+    uuid given_by_person_id FK "→ people.person"
+    int consent_channel_id FK "→ ref.consent_channel"
+    text consent_manager_ref "optional"
+    inet ip "optional"
+    timestamp granted_at
+    timestamp withdrawn_at "optional"
+  }
+  t_verifiable_parental_consent["privacy.verifiable_parental_consent"] {
+    uuid consent_id PK, FK
+    int verification_method_id FK "→ ref.verification_method"
+    timestamp verified_at
+    uuid evidence_file_id FK "→ people.file_object; optional"
+  }
+  t_nominee["privacy.nominee"] {
+    uuid id PK
+    uuid principal_person_id FK "→ people.person"
+    uuid nominee_person_id FK "→ people.person"
+    daterange valid
+  }
+  t_notice_purpose ||--o{ t_consent : "notice_id, purpose_id"
+  t_privacy_notice ||--o{ t_notice_purpose : "notice_id"
+  t_processing_purpose ||--o{ t_notice_purpose : "purpose_id"
+  t_data_processor ||--o{ t_processor_purpose : "processor_id"
+  t_processing_purpose ||--o{ t_processor_purpose : "purpose_id"
+  t_processing_purpose ||--o{ t_purpose_data_category : "purpose_id"
+  t_consent ||--o| t_verifiable_parental_consent : "consent_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

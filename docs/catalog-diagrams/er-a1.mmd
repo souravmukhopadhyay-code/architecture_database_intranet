@@ -1,0 +1,132 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_program["academic.program"]:::hub {
+    uuid id PK
+    text code UK
+    text name UK
+    text short_name UK "optional"
+    int program_level_id FK "→ ref.program_level"
+    int academic_calendar_type_id FK "→ ref.academic_calendar_type"
+    uuid offering_org_unit_id FK "→ org.org_unit"
+    int delivery_mode_id FK "→ ref.delivery_mode"
+    int medium_language_id FK "→ ref.language; optional"
+    int duration_terms
+    int min_credits "optional"
+    int max_credits "optional"
+    bool is_active
+  }
+  t_specialization["academic.specialization"] {
+    uuid id PK
+    uuid program_id FK, UK
+    text code UK
+    text name UK
+    bool is_active
+  }
+  t_program_coordinator["academic.program_coordinator"] {
+    uuid id PK
+    uuid program_id FK
+    uuid employee_id FK "→ people.employee"
+    daterange valid
+  }
+  t_program_approval["academic.program_approval"] {
+    uuid id PK
+    uuid program_id FK
+    int regulatory_body_id FK "→ ref.regulatory_body"
+    text reference_no
+    int approved_seats "optional"
+    daterange valid
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_program_accreditation["academic.program_accreditation"] {
+    uuid id PK
+    uuid program_id FK "optional"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    int accreditation_body_id FK "→ ref.accreditation_body"
+    text grade
+    numeric score "optional"
+    text reference_no "optional"
+    daterange valid
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_academic_year["academic.academic_year"]:::hub {
+    uuid id PK
+    text code UK
+    daterange period
+  }
+  t_academic_term["academic.academic_term"] {
+    uuid id PK
+    uuid academic_year_id FK, UK
+    int term_cycle_id FK, UK "→ ref.term_cycle"
+    daterange period
+  }
+  t_calendar_event["academic.calendar_event"] {
+    uuid id PK
+    uuid academic_year_id FK
+    uuid academic_term_id FK "optional"
+    int calendar_event_type_id FK "→ ref.calendar_event_type"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    text name
+    daterange period
+  }
+  t_batch["academic.batch"]:::hub {
+    uuid id PK
+    uuid program_id FK, UK
+    uuid admission_year_id FK, UK
+    int intake_capacity "optional"
+    bool is_active
+  }
+  t_batch_document["academic.batch_document"] {
+    uuid id PK
+    uuid batch_id FK
+    int batch_document_type_id FK "→ ref.batch_document_type"
+    uuid file_object_id FK, UK "→ people.file_object"
+    text title
+    text reference_no "optional"
+    date issued_on "optional"
+  }
+  t_batch_specialization["academic.batch_specialization"] {
+    uuid batch_id PK, FK
+    uuid specialization_id PK, FK
+    int from_term_no
+  }
+  t_student_enrollment["academic.student_enrollment"] {
+    uuid id PK
+    uuid student_id FK "→ people.student"
+    uuid batch_id FK
+    int entry_term_no
+    daterange valid
+    int end_reason_id FK "→ ref.enrollment_end_reason; optional"
+  }
+  t_student_specialization["academic.student_specialization"] {
+    uuid id PK
+    uuid student_enrollment_id FK
+    uuid specialization_id FK
+    daterange valid
+  }
+  t_academic_year ||--o{ t_academic_term : "academic_year_id"
+  t_academic_year ||--o{ t_batch : "admission_year_id"
+  t_program ||--o{ t_batch : "program_id"
+  t_batch ||--o{ t_batch_document : "batch_id"
+  t_batch ||--o{ t_batch_specialization : "batch_id"
+  t_specialization ||--o{ t_batch_specialization : "specialization_id"
+  t_academic_term |o--o{ t_calendar_event : "academic_term_id"
+  t_academic_year ||--o{ t_calendar_event : "academic_year_id"
+  t_program |o--o{ t_program_accreditation : "program_id"
+  t_program ||--o{ t_program_approval : "program_id"
+  t_program ||--o{ t_program_coordinator : "program_id"
+  t_program ||--o{ t_specialization : "program_id"
+  t_batch ||--o{ t_student_enrollment : "batch_id"
+  t_specialization ||--o{ t_student_specialization : "specialization_id"
+  t_student_enrollment ||--o{ t_student_specialization : "student_enrollment_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

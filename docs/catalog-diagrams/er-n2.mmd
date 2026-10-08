@@ -1,0 +1,159 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_event_proposal["events.event_proposal"]:::hub {
+    uuid id PK
+    text proposal_code UK
+    uuid organising_org_unit_id FK "→ org.org_unit"
+    uuid proposed_by_account_id FK "→ iam.user_account"
+    int event_type_id FK "→ ref.event_type"
+    text title
+    tsrange during
+    int event_level_id FK "→ ref.event_level"
+    int event_mode_id FK "→ ref.event_mode"
+    text theme
+    text objective
+    text anticipated_outcomes "optional"
+    text description "optional"
+    text venue_text "optional"
+    int participation_type_id FK "→ ref.participation_type"
+    int min_team_size "optional"
+    int max_team_size "optional"
+    bool is_paid
+    numeric fee_individual "optional"
+    numeric fee_team "optional"
+    int approx_capacity
+    int capacity_fixed "optional"
+    int duty_leave_scope_id FK "→ ref.duty_leave_scope; optional"
+    bool gives_certificates
+    bool allow_extra_passes
+    int max_extra_passes
+    uuid facility_event_request_id FK, UK "→ facility.event_request; optional"
+    uuid revises_proposal_id FK "optional"
+    uuid instance_id FK, UK "→ wf.approval_instance; optional"
+  }
+  t_proposal_audience["events.proposal_audience"] {
+    uuid event_proposal_id PK, FK
+    int event_audience_kind_id PK, FK "→ ref.event_audience_kind"
+  }
+  t_proposal_sdg["events.proposal_sdg"] {
+    uuid event_proposal_id PK, FK
+    int sdg_no PK
+  }
+  t_proposal_partner["events.proposal_partner"] {
+    uuid event_proposal_id PK, FK
+    uuid partner_org_unit_id PK, FK "→ org.org_unit"
+  }
+  t_proposal_speaker["events.proposal_speaker"] {
+    uuid id PK
+    uuid event_proposal_id FK
+    uuid person_id FK "→ people.person; optional"
+    text speaker_name "optional"
+    text designation "optional"
+    text organisation "optional"
+    text cv_url "optional"
+  }
+  t_proposal_coordinator["events.proposal_coordinator"] {
+    uuid event_proposal_id PK, FK
+    uuid person_id PK, FK "→ people.person"
+    text coordinator_role
+  }
+  t_proposal_budget_item["events.proposal_budget_item"] {
+    uuid id PK
+    uuid event_proposal_id FK
+    int budget_item_type_id FK "→ ref.budget_item_type"
+    text description
+    numeric unit_cost
+    numeric quantity
+  }
+  t_proposal_funding["events.proposal_funding"] {
+    uuid id PK
+    uuid event_proposal_id FK, UK
+    int funding_source_id FK, UK "→ ref.funding_source"
+    numeric expected_amount
+    text note "optional"
+  }
+  t_proposal_prize["events.proposal_prize"] {
+    uuid id PK
+    uuid event_proposal_id FK, UK
+    int position UK
+    text title UK
+    int event_prize_type_id FK "→ ref.event_prize_type"
+    numeric amount "optional"
+    text perks "optional"
+  }
+  t_proposal_attachment["events.proposal_attachment"] {
+    uuid event_proposal_id PK, FK
+    uuid file_object_id PK, FK "→ people.file_object"
+    text description "optional"
+  }
+  t_proposal_visibility_role["events.proposal_visibility_role"] {
+    uuid event_proposal_id PK, FK
+    int principal_kind_id PK, FK "→ ref.principal_kind"
+  }
+  t_proposal_visibility_scope["events.proposal_visibility_scope"] {
+    uuid id PK
+    uuid event_proposal_id FK
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    uuid program_id FK "→ academic.program; optional"
+    uuid batch_id FK "→ academic.batch; optional"
+  }
+  t_event_sponsor["events.event_sponsor"] {
+    uuid id PK
+    text name UK
+    int sponsor_type_id FK "→ ref.sponsor_type"
+    uuid contact_person_id FK "→ people.person; optional"
+    uuid logo_file_id FK "→ people.file_object; optional"
+  }
+  t_event_sponsorship["events.event_sponsorship"] {
+    uuid id PK
+    uuid event_proposal_id FK, UK
+    uuid sponsor_id FK, UK
+    int contribution_type_id FK "→ ref.contribution_type"
+    numeric cash_amount "optional"
+    bool show_publicly
+  }
+  t_sponsorship_receipt["events.sponsorship_receipt"] {
+    bigint id PK
+    uuid sponsorship_id FK
+    numeric amount
+    date received_on
+    text reference "optional"
+    uuid recorded_by_account_id FK "→ iam.user_account"
+  }
+  t_sponsorship_item["events.sponsorship_item"] {
+    uuid id PK
+    uuid sponsorship_id FK
+    text item_name
+    numeric quantity
+    numeric estimated_value "optional"
+    timestamp delivered_at "optional"
+    uuid assigned_to_person_id FK "→ people.person; optional"
+  }
+  t_event_proposal |o--o{ t_event_proposal : "revises_proposal_id"
+  t_event_proposal ||--o{ t_event_sponsorship : "event_proposal_id"
+  t_event_sponsor ||--o{ t_event_sponsorship : "sponsor_id"
+  t_event_proposal ||--o{ t_proposal_attachment : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_audience : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_budget_item : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_coordinator : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_funding : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_partner : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_prize : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_sdg : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_speaker : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_visibility_role : "event_proposal_id"
+  t_event_proposal ||--o{ t_proposal_visibility_scope : "event_proposal_id"
+  t_event_sponsorship ||--o{ t_sponsorship_item : "sponsorship_id"
+  t_event_sponsorship ||--o{ t_sponsorship_receipt : "sponsorship_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

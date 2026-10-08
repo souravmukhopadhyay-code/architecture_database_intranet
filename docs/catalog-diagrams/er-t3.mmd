@@ -1,0 +1,60 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_ticket_route["tms.ticket_route"] {
+    int id PK
+    text code UK
+    text label
+    int ticket_domain_id FK "→ ref.tms_ticket_domain"
+    bool is_active
+  }
+  t_ticket_route_level["tms.ticket_route_level"] {
+    int id PK
+    int route_id FK, UK
+    int seq UK
+    text label
+    int route_level_kind_id FK "→ ref.tms_route_level_kind"
+    int category_level_id FK "→ ref.tms_category_level; optional"
+    int position_type_id FK "→ org.position_type; optional"
+    int anchor_base_id FK "→ ref.tms_anchor_base; optional"
+    int anchor_org_unit_type_id FK "→ ref.org_unit_type; optional"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    int reporting_line_type_id FK "→ ref.reporting_line_type; optional"
+    int manager_level "optional"
+    uuid employee_id FK "→ people.employee; optional"
+    int sla_hours "optional"
+    bool oversees
+  }
+  t_redressal_forum["tms.redressal_forum"] {
+    int id PK
+    text code UK
+    text label
+    int academic_body_type_id FK "→ ref.academic_body_type; optional"
+    int position_type_id FK "→ org.position_type; optional"
+    int anchor_org_unit_type_id FK "→ ref.org_unit_type; optional"
+    int decision_within_days
+    bool counts_office_days
+    bool needs_resolution
+    int appeal_forum_id FK "optional"
+    int appeal_window_days "optional"
+    int compliance_within_days "optional"
+    int next_forum_id FK "optional"
+    int first_action_within_hours "optional"
+    int alert_position_type_id FK "→ org.position_type; optional"
+    bool is_confidential
+    bool is_active
+  }
+  t_redressal_forum |o--o{ t_redressal_forum : "appeal_forum_id"
+  t_redressal_forum |o--o{ t_redressal_forum : "next_forum_id"
+  t_ticket_route ||--o{ t_ticket_route_level : "route_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

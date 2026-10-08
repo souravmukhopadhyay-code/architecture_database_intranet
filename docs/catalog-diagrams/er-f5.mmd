@@ -1,0 +1,143 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_vehicle["facility.vehicle"]:::hub {
+    uuid id PK
+    text registration_no UK
+    int vehicle_type_id FK "→ ref.vehicle_type"
+    int fuel_type_id FK "→ ref.fuel_type"
+    text make_model
+    int seats
+    int min_licence_class_id FK "→ ref.licence_class"
+    uuid custodian_org_unit_id FK "→ org.org_unit"
+    bool is_active
+    date retired_on "optional"
+  }
+  t_vehicle_document["facility.vehicle_document"] {
+    uuid id PK
+    uuid vehicle_id FK
+    int vehicle_document_type_id FK "→ ref.vehicle_document_type"
+    text document_no
+    daterange valid
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_vehicle_service_window["facility.vehicle_service_window"] {
+    uuid id PK
+    uuid vehicle_id FK
+    int vehicle_service_type_id FK "→ ref.vehicle_service_type"
+    tsrange during
+    text note "optional"
+  }
+  t_driver["facility.driver"] {
+    uuid id PK
+    uuid employee_id FK, UK "→ people.employee"
+    uuid licence_document_id FK, UK "→ pii.person_identity_document"
+    int licence_class_id FK "→ ref.licence_class"
+    bool is_active
+  }
+  t_driver_unavailability["facility.driver_unavailability"] {
+    uuid id PK
+    uuid driver_id FK
+    int driver_unavailability_reason_id FK "→ ref.driver_unavailability_reason"
+    tsrange during
+  }
+  t_transport_policy["facility.transport_policy"] {
+    uuid id PK
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    daterange valid
+    interval urgent_threshold
+    interval auto_approve_before
+    interval alert_before
+    int max_headcount
+    interval min_notice
+  }
+  t_trip_request["facility.trip_request"]:::hub {
+    uuid id PK
+    uuid requester_person_id FK "→ people.person"
+    uuid on_behalf_org_unit_id FK "→ org.org_unit"
+    int trip_purpose_id FK "→ ref.trip_purpose"
+    uuid event_request_id FK "→ event_request; optional"
+    tsrange during
+    text origin_text
+    text destination_text
+    numeric origin_lat "optional"
+    numeric origin_lon "optional"
+    numeric destination_lat "optional"
+    numeric destination_lon "optional"
+    numeric estimated_km "optional"
+    int estimated_minutes "optional"
+    int headcount
+    text contact_phone
+    text note "optional"
+    uuid instance_id FK, UK "→ wf.approval_instance"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+    int trip_cancel_reason_id FK "→ ref.trip_cancel_reason; optional"
+  }
+  t_trip_allocation["facility.trip_allocation"] {
+    uuid id PK
+    uuid trip_request_id FK
+    uuid driver_id FK
+    uuid vehicle_id FK "optional"
+    tsrange during
+    uuid allocated_by_account_id FK "→ iam.user_account"
+    timestamp allocated_at
+    bytes start_token_hash "optional"
+    bytes complete_token_hash "optional"
+    timestamp released_at "optional"
+    uuid released_by_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+  }
+  t_trip_allocation_request["facility.trip_allocation_request"] {
+    uuid trip_allocation_id PK, FK
+    uuid trip_request_id PK, FK
+    uuid added_by_account_id FK "→ iam.user_account"
+  }
+  t_trip["facility.trip"] {
+    uuid id PK
+    uuid trip_allocation_id FK, UK
+    timestamp started_at "optional"
+    int start_odometer_km "optional"
+    uuid pickup_photo_file_id FK "→ people.file_object; optional"
+    timestamp completed_at "optional"
+    int end_odometer_km "optional"
+    timestamp closed_at "optional"
+    uuid closed_by_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+  }
+  t_trip_rating["facility.trip_rating"] {
+    uuid id PK
+    uuid trip_id FK, UK
+    int rating_role_id FK, UK "→ ref.rating_role"
+    uuid rated_by_person_id FK, UK "→ people.person"
+    int rating
+    text comment "optional"
+  }
+  t_trip_alert["facility.trip_alert"] {
+    bigint id PK
+    uuid trip_request_id FK, UK
+    int trip_alert_type_id FK, UK "→ ref.trip_alert_type"
+    timestamp raised_at
+  }
+  t_driver ||--o{ t_driver_unavailability : "driver_id"
+  t_trip_allocation ||--o| t_trip : "trip_allocation_id"
+  t_trip_request ||--o{ t_trip_alert : "trip_request_id"
+  t_driver ||--o{ t_trip_allocation : "driver_id"
+  t_trip_request ||--o{ t_trip_allocation : "trip_request_id"
+  t_vehicle |o--o{ t_trip_allocation : "vehicle_id"
+  t_trip_allocation ||--o{ t_trip_allocation_request : "trip_allocation_id"
+  t_trip_request ||--o| t_trip_allocation_request : "trip_request_id"
+  t_trip ||--o{ t_trip_rating : "trip_id"
+  t_vehicle ||--o{ t_vehicle_document : "vehicle_id"
+  t_vehicle ||--o{ t_vehicle_service_window : "vehicle_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

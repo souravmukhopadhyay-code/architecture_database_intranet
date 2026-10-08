@@ -1,0 +1,59 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_club_change_request["events.club_change_request"] {
+    uuid id PK
+    text request_code UK
+    uuid club_org_unit_id FK "→ club"
+    int club_change_type_id FK "→ ref.club_change_type"
+    text justification
+    text new_name "optional"
+    text new_objective "optional"
+    uuid new_employee_id FK "→ people.employee; optional"
+    int new_club_category_id FK "→ ref.club_category; optional"
+    uuid requested_by_account_id FK "→ iam.user_account"
+    uuid instance_id FK, UK "→ wf.approval_instance; optional"
+    timestamp applied_at "optional"
+  }
+  t_club_change_officer["events.club_change_officer"] {
+    uuid id PK
+    uuid club_change_request_id FK, UK
+    int club_office_id FK, UK "→ ref.club_office"
+    uuid student_id FK "→ people.student; optional"
+  }
+  t_club_change_member["events.club_change_member"] {
+    uuid id PK
+    uuid club_change_request_id FK, UK
+    uuid student_id FK, UK "→ people.student"
+    bool is_removal
+    int club_member_role_id FK "→ ref.club_member_role; optional"
+  }
+  t_primary_club["events.primary_club"] {
+    uuid student_id PK, FK "→ people.student"
+    uuid club_org_unit_id FK "→ club"
+    timestamp set_at
+  }
+  t_volunteer_application["events.volunteer_application"] {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    uuid person_id FK, UK "→ people.person"
+    text note "optional"
+    timestamp applied_at
+    timestamp decided_at "optional"
+    uuid decided_by_account_id FK "→ iam.user_account; optional"
+    bool is_accepted "optional"
+    text decision_note "optional"
+  }
+  t_club_change_request ||--o{ t_club_change_member : "club_change_request_id"
+  t_club_change_request ||--o{ t_club_change_officer : "club_change_request_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

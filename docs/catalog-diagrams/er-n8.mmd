@@ -1,0 +1,49 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_event_mail["events.event_mail"] {
+    uuid id PK
+    uuid event_id FK "→ event"
+    text subject
+    text body
+    int mail_audience_id FK "→ ref.mail_audience"
+    uuid created_by_account_id FK "→ iam.user_account"
+    timestamp scheduled_at "optional"
+    timestamp dispatch_started_at "optional"
+    timestamp failed_at "optional"
+    text failure_reason "optional"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_event_mail_recipient["events.event_mail_recipient"] {
+    uuid id PK
+    uuid event_mail_id FK, UK
+    uuid registration_id FK, UK "→ event_registration"
+    int mail_delivery_status_id FK "→ ref.mail_delivery_status"
+    text failure_reason "optional"
+    timestamp delivered_at "optional"
+    timestamp failed_at "optional"
+    int open_count
+    timestamp first_opened_at "optional"
+    timestamp last_opened_at "optional"
+  }
+  t_event_mail_credit_grant["events.event_mail_credit_grant"] {
+    uuid id PK
+    uuid event_id FK "→ event"
+    int credits
+    text reason
+    uuid granted_by_account_id FK "→ iam.user_account"
+    timestamp granted_at
+  }
+  t_event_mail ||--o{ t_event_mail_recipient : "event_mail_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

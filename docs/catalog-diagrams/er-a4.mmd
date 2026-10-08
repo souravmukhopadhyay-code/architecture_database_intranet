@@ -1,0 +1,124 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_course_offering["academic.course_offering"]:::hub {
+    uuid id PK
+    uuid course_id FK, UK "→ course"
+    uuid academic_term_id FK, UK "→ academic_term"
+    uuid offering_org_unit_id FK "→ org.org_unit"
+    int intake_limit "optional"
+  }
+  t_offering_seat_quota["academic.offering_seat_quota"] {
+    uuid id PK
+    uuid course_offering_id FK, UK
+    uuid program_id FK, UK "→ program; optional"
+    uuid org_unit_id FK, UK "→ org.org_unit; optional"
+    int max_seats
+  }
+  t_section["academic.section"]:::hub {
+    uuid id PK
+    uuid batch_id FK, UK "→ batch"
+    uuid academic_term_id FK, UK "→ academic_term"
+    text code UK
+    int capacity
+  }
+  t_section_student["academic.section_student"] {
+    uuid section_id PK, FK
+    uuid student_enrollment_id PK, FK "→ student_enrollment"
+  }
+  t_section_representative["academic.section_representative"] {
+    uuid section_id PK, FK
+    int section_role_id PK, FK "→ ref.section_role"
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid appointed_by_employee_id FK "→ people.employee; optional"
+  }
+  t_class_group["academic.class_group"] {
+    uuid id PK
+    uuid course_offering_id FK, UK
+    text code UK
+    uuid parent_section_id FK "optional"
+    int delivery_component_id FK "→ ref.delivery_component; optional"
+    int capacity
+  }
+  t_class_group_member["academic.class_group_member"] {
+    uuid class_group_id PK, FK
+    uuid course_registration_id PK, FK "→ course_registration"
+  }
+  t_teaching_assignment["academic.teaching_assignment"] {
+    uuid id PK
+    uuid course_offering_id FK
+    uuid section_id FK "optional"
+    uuid class_group_id FK "optional"
+    uuid employee_id FK "→ people.employee"
+    int delivery_component_id FK "→ ref.delivery_component"
+    bool is_primary
+    daterange valid
+  }
+  t_time_slot["academic.time_slot"] {
+    int id PK
+    text code UK
+    int day_of_week UK
+    time start_time UK
+    time end_time UK
+    bool is_active
+  }
+  t_timetable_entry["academic.timetable_entry"] {
+    uuid id PK
+    uuid teaching_assignment_id FK
+    int time_slot_id FK
+    uuid room_id FK "→ org.room"
+    int repeat_every_weeks
+    daterange valid
+  }
+  t_faculty_unavailability["academic.faculty_unavailability"] {
+    uuid id PK
+    uuid employee_id FK "→ people.employee"
+    int day_of_week
+    time start_time
+    time end_time
+    daterange valid
+    text reason "optional"
+  }
+  t_faculty_course_preference["academic.faculty_course_preference"] {
+    uuid academic_term_id PK, FK "→ academic_term"
+    uuid employee_id PK, FK "→ people.employee"
+    uuid course_id PK, FK "→ course"
+    int preference_rank UK
+    text remarks "optional"
+  }
+  t_course_room_requirement["academic.course_room_requirement"] {
+    uuid id PK
+    uuid course_id FK, UK "→ course"
+    int delivery_component_id FK, UK "→ ref.delivery_component"
+    int room_type_id FK, UK "→ ref.room_type; optional"
+    int room_feature_id FK, UK "→ ref.room_feature; optional"
+  }
+  t_workload_norm["academic.workload_norm"] {
+    uuid id PK
+    int designation_id FK "→ people.designation"
+    numeric min_hours_per_week "optional"
+    numeric max_hours_per_week "optional"
+    daterange valid
+  }
+  t_course_offering ||--o{ t_class_group : "course_offering_id"
+  t_section |o--o{ t_class_group : "parent_section_id"
+  t_class_group ||--o{ t_class_group_member : "class_group_id"
+  t_course_offering ||--o{ t_offering_seat_quota : "course_offering_id"
+  t_section ||--o{ t_section_representative : "section_id"
+  t_section ||--o{ t_section_student : "section_id"
+  t_class_group |o--o{ t_teaching_assignment : "class_group_id"
+  t_course_offering ||--o{ t_teaching_assignment : "course_offering_id"
+  t_section |o--o{ t_teaching_assignment : "section_id"
+  t_teaching_assignment ||--o{ t_timetable_entry : "teaching_assignment_id"
+  t_time_slot ||--o{ t_timetable_entry : "time_slot_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

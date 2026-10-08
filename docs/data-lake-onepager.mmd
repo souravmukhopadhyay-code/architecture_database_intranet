@@ -1,0 +1,74 @@
+%%{init: {'theme':'base','themeVariables':{'fontSize':'16px'},'flowchart':{'htmlLabels':true,'curve':'basis','nodeSpacing':30,'rankSpacing':45}}}%%
+flowchart TB
+    classDef src fill:#e8f1ff,stroke:#2f6fdb,color:#0b2a5b
+    classDef ing fill:#fff4d6,stroke:#c88a00,color:#4a3300
+    classDef brz fill:#f3e3d3,stroke:#a8642a,color:#3d2209
+    classDef slv fill:#e6e9ee,stroke:#5b6676,color:#1d232c
+    classDef gld fill:#fff0b8,stroke:#b8940a,color:#4a3a00
+    classDef gov fill:#fde4e4,stroke:#c0392b,color:#5a1510
+    classDef ai  fill:#e4f6ea,stroke:#1e8449,color:#0c3a1f
+    classDef usr fill:#efe6fb,stroke:#6c3fb5,color:#2c1556
+
+    subgraph S["① SOURCE · intranet PostgreSQL (OLTP) · 546 tables · 16 schemas · the system of record"]
+        direction LR
+        S1["<b>Operational</b><br/>academic · exam · research · people · org<br/>facility · tms · events · wf · ref"]
+        S2["<b>Audit</b><br/>append-only change trail"]
+        S3["<b>Restricted — never enters the lake</b><br/>pii · iam · authz secrets"]
+    end
+
+    subgraph I["② INGEST · reads a replica as role intranet_analytics (no pii access), never the live app"]
+        direction LR
+        I1["CDC via logical replication<br/>(every insert / update / delete)"]
+        I2["Celery batch<br/>for ref data + nightly snapshots"]
+        I3["Contract check<br/>schema drift · row-count reconcile"]
+    end
+
+    subgraph L["③ DATA LAKE · object store · Parquet / Iceberg"]
+        direction LR
+        B["<b>BRONZE · raw</b><br/>1:1 copy of every table<br/>append-only, full history"]
+        V["<b>SILVER · clean</b><br/>typed · de-duplicated<br/>valid-from/to ranges kept<br/>personal ids tokenised"]
+        G["<b>GOLD · business marts</b><br/>student 360 · attendance &amp; results<br/>refunds · ticket SLA · facility use<br/>events &amp; club points · approvals"]
+        B --> V --> G
+    end
+
+    subgraph GV["DPDP ACT 2023 · governance applied at every layer"]
+        direction LR
+        GV1["<b>Catalog &amp; lineage</b><br/>from data-dictionary<br/>+ table-catalog"]
+        GV2["<b>Purpose + consent gate</b><br/>privacy.* decides who may<br/>use which data, for what"]
+        GV3["<b>Erasure &amp; retention</b><br/>privacy.data_element action<br/>(DELETE / ANONYMISE / RETAIN)<br/>replayed on the lake"]
+        GV4["<b>Row access</b><br/>authz role + org-unit scope<br/>carried into every query"]
+    end
+
+    subgraph A["④ AI / ML · answers the retrieval problem"]
+        direction LR
+        A1["<b>Semantic layer</b><br/>business terms → tables, joins, metrics<br/>(e.g. 'defaulter' = attendance below<br/>the policy row)"]
+        A2["<b>Text-to-SQL agent</b><br/>question → SQL on Gold only<br/>read-only · validated · row-limited"]
+        A3["<b>RAG search</b><br/>embeddings of policies, SOE,<br/>notices, tickets, KB articles"]
+        A4["<b>ML models</b><br/>dropout / at-risk · result forecast<br/>ticket auto-route · SLA breach<br/>room &amp; fleet demand"]
+        A1 --> A2
+    end
+
+    subgraph U["⑤ CONSUMERS"]
+        direction LR
+        U1["Ask-in-English chat<br/>students · faculty · HoD · admin"]
+        U2["Dashboards<br/>VC · deans · registrar"]
+        U3["Regulator exports<br/>NAAC · NIRF · AISHE"]
+        U4["Alerts &amp; actions<br/>risk flag → helpdesk / wf task<br/>through the DRF API only"]
+    end
+
+    S -- "CDC + batch · pii excluded" --> I
+    I -- "validated loads" --> L
+    L -- "Gold + Silver feed models" --> A
+    GV -. "checked at every layer" .- L
+    GV -. "enforced on every question" .- A
+    A -- "answers · scores · alerts" --> U
+    L -- "marts" --> U
+
+    class S1,S2,S3 src
+    class I1,I2,I3 ing
+    class B brz
+    class V slv
+    class G gld
+    class GV1,GV2,GV3,GV4 gov
+    class A1,A2,A3,A4 ai
+    class U1,U2,U3,U4 usr

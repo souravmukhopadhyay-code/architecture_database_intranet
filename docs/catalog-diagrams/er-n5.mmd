@@ -1,0 +1,98 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_event_feedback_token["events.event_feedback_token"] {
+    uuid registration_id PK, FK "→ event_registration"
+    bytes token_hash UK
+    timestamp issued_at
+    timestamp used_at "optional"
+  }
+  t_event_feedback["events.event_feedback"] {
+    bigint id PK
+    uuid event_id FK "→ event"
+    int rating
+    text comment "optional"
+    date submitted_on
+  }
+  t_event_certificate_template["events.event_certificate_template"] {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    int event_certificate_type_id FK, UK "→ ref.event_certificate_type"
+    text title
+    text body
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_event_certificate["events.event_certificate"] {
+    uuid id PK
+    uuid certificate_template_id FK, UK
+    uuid registration_id FK, UK "→ event_registration; optional"
+    uuid event_volunteer_id FK, UK "→ event_volunteer; optional"
+    text serial_no UK
+    text verification_code UK
+    timestamp issued_at
+    uuid issued_by_account_id FK "→ iam.user_account"
+    uuid file_object_id FK "→ people.file_object; optional"
+    timestamp revoked_at "optional"
+    text revoke_reason "optional"
+  }
+  t_event_type_points["events.event_type_points"] {
+    uuid id PK
+    int event_type_id FK "→ ref.event_type"
+    int points
+    daterange valid
+  }
+  t_club_point_award["events.club_point_award"] {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    int points
+    timestamp awarded_at
+  }
+  t_club_tier["events.club_tier"] {
+    int id PK
+    text name UK
+    int tier_order UK
+    intrange points
+    char badge_color "optional"
+  }
+  t_event_setting["events.event_setting"] {
+    bool id PK
+    int club_name_min_length
+    int club_name_max_length
+    int club_objective_min_length
+    bool advisor_must_be_faculty
+    interval proposal_min_lead_time
+    bool proposal_needs_audience
+    bool proposal_needs_coordinator
+    bool proposal_needs_sdg
+    int max_open_proposals_per_proposer "optional"
+    int max_extra_passes_per_participant
+    bool publish_needs_description
+    bool publish_needs_contact
+    bool publish_needs_round
+    int feedback_rating_max
+    int max_open_club_changes "optional"
+    bool primary_club_requires_office
+    char currency_code
+    numeric min_payable_amount
+    interval unpaid_registration_expiry "optional"
+    int mail_credits_per_registration
+    int mail_subject_max_length
+    int mail_body_max_length
+    bool mail_open_tracking
+    int stall_feedback_max_points
+    interval round_checkin_opens_before
+    numeric expense_bill_required_above "optional"
+    uuid updated_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_event_certificate_template ||--o{ t_event_certificate : "certificate_template_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

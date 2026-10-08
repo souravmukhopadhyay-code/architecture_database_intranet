@@ -1,0 +1,126 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_event["events.event"]:::hub {
+    uuid id PK
+    text event_code UK
+    uuid event_proposal_id FK, UK "→ event_proposal"
+    text short_description "optional"
+    text long_description "optional"
+    uuid contact_person_id FK "→ people.person; optional"
+    tsrange registration_window "optional"
+    int registration_cap "optional"
+    bool requires_approval
+    bool allow_withdraw
+    bool accepts_volunteer_applications
+    bool stall_applications_open
+    timestamp stall_application_deadline "optional"
+    int max_applied_stalls "optional"
+    text website_url "optional"
+    uuid logo_file_id FK "→ people.file_object; optional"
+    uuid banner_file_id FK "→ people.file_object; optional"
+    text eligibility_text "optional"
+    text rules_text "optional"
+    timestamp published_at "optional"
+    uuid published_by_account_id FK "→ iam.user_account; optional"
+    timestamp completed_at "optional"
+    uuid completed_by_account_id FK "→ iam.user_account; optional"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+    text cancel_reason "optional"
+  }
+  t_event_round["events.event_round"] {
+    uuid id PK
+    uuid event_id FK, UK
+    text name UK
+    tsrange during
+    int event_round_type_id FK "→ ref.event_round_type"
+    text description "optional"
+  }
+  t_event_faq["events.event_faq"] {
+    uuid id PK
+    uuid event_id FK, UK
+    int seq UK
+    text question
+    text answer
+  }
+  t_event_link["events.event_link"] {
+    uuid id PK
+    uuid event_id FK, UK
+    text label UK
+    text url
+  }
+  t_event_custom_field["events.event_custom_field"] {
+    uuid id PK
+    uuid event_id FK, UK
+    text field_name UK
+    text label
+    int event_field_type_id FK "→ ref.event_field_type"
+    bool is_required
+    text help_text "optional"
+    int sort_order
+    bool is_active
+  }
+  t_custom_field_option["events.custom_field_option"] {
+    uuid event_custom_field_id PK, FK
+    text option_value PK
+    int sort_order
+  }
+  t_event_volunteer["events.event_volunteer"] {
+    uuid id PK
+    uuid event_id FK, UK
+    uuid person_id FK, UK "→ people.person"
+    int volunteer_role_id FK "→ ref.volunteer_role"
+    bool can_scan
+    text gate "optional"
+    uuid assigned_by_account_id FK "→ iam.user_account"
+    timestamp assigned_at
+    timestamp removed_at "optional"
+  }
+  t_post_event_report["events.post_event_report"] {
+    uuid id PK
+    uuid event_id FK, UK
+    int version UK
+    uuid file_object_id FK "→ people.file_object"
+    text summary "optional"
+    int actual_attendance "optional"
+    uuid uploaded_by_account_id FK "→ iam.user_account"
+    timestamp uploaded_at
+  }
+  t_event_change_request["events.event_change_request"] {
+    uuid id PK
+    text request_code UK
+    uuid event_id FK
+    text reason
+    tsrange new_during "optional"
+    text new_venue_text "optional"
+    int new_approx_capacity "optional"
+    int new_capacity_fixed "optional"
+    tsrange previous_during "optional"
+    text previous_venue_text "optional"
+    int previous_approx_capacity "optional"
+    int previous_capacity_fixed "optional"
+    uuid facility_event_request_id FK "→ facility.event_request; optional"
+    uuid requested_by_account_id FK "→ iam.user_account"
+    uuid instance_id FK, UK "→ wf.approval_instance; optional"
+    timestamp applied_at "optional"
+  }
+  t_event_custom_field ||--o{ t_custom_field_option : "event_custom_field_id"
+  t_event ||--o{ t_event_change_request : "event_id"
+  t_event ||--o{ t_event_custom_field : "event_id"
+  t_event ||--o{ t_event_faq : "event_id"
+  t_event ||--o{ t_event_link : "event_id"
+  t_event ||--o{ t_event_round : "event_id"
+  t_event ||--o{ t_event_volunteer : "event_id"
+  t_event ||--o{ t_post_event_report : "event_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

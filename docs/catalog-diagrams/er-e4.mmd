@@ -1,0 +1,88 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_result_publication["exam.result_publication"] {
+    uuid id PK
+    uuid exam_session_id FK "→ exam_session"
+    int publication_type_id FK "→ ref.publication_type"
+    timestamp published_at
+    uuid published_by_employee_id FK "→ people.employee"
+    text note "optional"
+  }
+  t_course_result["exam.course_result"] {
+    uuid id PK
+    uuid result_publication_id FK, UK
+    uuid exam_registration_id FK, UK "→ exam_registration"
+    numeric total_pct
+    int grade_band_id FK "→ academic.grade_band"
+    int result_status_id FK "→ ref.result_status"
+  }
+  t_marksheet["exam.marksheet"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ academic.student_enrollment"
+    uuid exam_session_id FK "→ exam_session"
+    text serial_no UK
+    bool is_duplicate
+    uuid issued_by_employee_id FK "→ people.employee"
+    timestamp issued_at
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_certificate["exam.certificate"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ academic.student_enrollment"
+    int certificate_type_id FK "→ ref.certificate_type"
+    text serial_no UK
+    text verification_code UK
+    uuid student_award_id FK "→ academic.student_award; optional"
+    uuid convocation_id FK "optional"
+    bool is_duplicate
+    date issued_on
+    uuid issued_by_employee_id FK "→ people.employee"
+    text nad_reference UK "optional"
+    uuid file_object_id FK "→ people.file_object; optional"
+    timestamp cancelled_at "optional"
+    text cancel_reason "optional"
+  }
+  t_convocation["exam.convocation"] {
+    uuid id PK
+    uuid academic_year_id FK, UK "→ academic.academic_year"
+    text name UK
+    date held_on
+    time start_time "optional"
+    time end_time "optional"
+    uuid room_id FK "→ org.room; optional"
+  }
+  t_prize["exam.prize"] {
+    uuid id PK
+    text code UK
+    text name
+    int prize_type_id FK "→ ref.prize_type"
+    uuid program_id FK "→ academic.program; optional"
+    int rank_position "optional"
+    text sponsor "optional"
+    bool is_active
+  }
+  t_prize_award["exam.prize_award"] {
+    uuid id PK
+    uuid prize_id FK, UK
+    uuid student_enrollment_id FK, UK "→ academic.student_enrollment"
+    uuid convocation_id FK "optional"
+    date awarded_on
+    text citation "optional"
+    uuid approved_by_employee_id FK "→ people.employee"
+  }
+  t_convocation |o--o{ t_certificate : "convocation_id"
+  t_result_publication ||--o{ t_course_result : "result_publication_id"
+  t_convocation |o--o{ t_prize_award : "convocation_id"
+  t_prize ||--o{ t_prize_award : "prize_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

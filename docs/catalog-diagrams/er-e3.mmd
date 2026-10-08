@@ -1,0 +1,89 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_answer_script["exam.answer_script"] {
+    uuid id PK
+    uuid exam_schedule_id FK, UK "→ exam_schedule"
+    uuid exam_registration_id FK, UK "→ exam_registration"
+    text dummy_code UK
+  }
+  t_evaluator_assignment["exam.evaluator_assignment"] {
+    uuid answer_script_id PK, FK
+    int evaluation_round_id PK, FK "→ ref.evaluation_round"
+    uuid employee_id FK "→ people.employee"
+    timestamp assigned_at
+  }
+  t_script_mark["exam.script_mark"] {
+    uuid answer_script_id PK, FK
+    int evaluation_round_id PK, FK
+    numeric marks
+    text note "optional"
+    timestamp entered_at
+  }
+  t_component_mark["exam.component_mark"] {
+    uuid id PK
+    uuid course_registration_id FK, UK "→ academic.course_registration"
+    int evaluation_component_id FK, UK "→ academic.evaluation_component"
+    uuid exam_registration_id FK, UK "→ exam_registration; optional"
+    numeric marks "optional"
+    bool is_absent
+    uuid entered_by_employee_id FK "→ people.employee"
+    timestamp entered_at
+  }
+  t_internal_mark_revision["exam.internal_mark_revision"] {
+    uuid id PK
+    uuid component_mark_id FK
+    numeric revised_marks
+    text reason
+    uuid requested_by_employee_id FK "→ people.employee"
+    uuid instance_id FK, UK "→ wf.approval_instance"
+  }
+  t_revaluation_request["exam.revaluation_request"] {
+    uuid id PK
+    uuid answer_script_id FK, UK
+    int revaluation_type_id FK, UK "→ ref.revaluation_type"
+    int revaluation_status_id FK "→ ref.revaluation_status"
+    timestamp requested_at
+    timestamp closed_at "optional"
+  }
+  t_grace_policy["exam.grace_policy"] {
+    int id PK
+    text code UK
+    text name
+    numeric max_marks_per_course
+    int max_courses_per_session
+    bool is_active
+  }
+  t_grace_award["exam.grace_award"] {
+    uuid id PK
+    uuid exam_registration_id FK, UK "→ exam_registration"
+    int grace_policy_id FK
+    numeric marks
+    uuid approved_by_employee_id FK "→ people.employee"
+    timestamp approved_at
+  }
+  t_result_moderation["exam.result_moderation"] {
+    uuid id PK
+    uuid exam_session_id FK, UK "→ exam_session"
+    uuid course_offering_id FK, UK "→ academic.course_offering"
+    numeric add_pct
+    text reason
+    uuid approved_by_employee_id FK "→ people.employee"
+    timestamp approved_at
+  }
+  t_answer_script ||--o{ t_evaluator_assignment : "answer_script_id"
+  t_grace_policy ||--o{ t_grace_award : "grace_policy_id"
+  t_component_mark ||--o{ t_internal_mark_revision : "component_mark_id"
+  t_answer_script ||--o{ t_revaluation_request : "answer_script_id"
+  t_evaluator_assignment ||--o| t_script_mark : "answer_script_id, evaluation_round_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

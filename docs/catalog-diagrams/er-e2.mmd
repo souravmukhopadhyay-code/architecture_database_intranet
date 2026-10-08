@@ -1,0 +1,75 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_paper_setter_assignment["exam.paper_setter_assignment"] {
+    uuid id PK
+    uuid exam_session_id FK, UK "→ exam_session"
+    uuid course_offering_id FK, UK "→ academic.course_offering"
+    int assessment_type_id FK, UK "→ ref.assessment_type"
+    int paper_setter_role_id FK, UK "→ ref.paper_setter_role"
+    uuid employee_id FK "→ people.employee; optional"
+    uuid external_person_id FK "→ people.person; optional"
+    date due_on "optional"
+    uuid appointed_by_employee_id FK "→ people.employee"
+  }
+  t_question_paper["exam.question_paper"] {
+    uuid id PK
+    uuid exam_session_id FK, UK "→ exam_session"
+    uuid course_offering_id FK, UK "→ academic.course_offering"
+    int assessment_type_id FK, UK "→ ref.assessment_type"
+    text set_code UK
+    int question_paper_status_id FK "→ ref.question_paper_status"
+    uuid submitted_by_assignment_id FK "optional"
+    timestamp submitted_at "optional"
+    uuid moderated_by_assignment_id FK "optional"
+    timestamp moderated_at "optional"
+    uuid approved_by_employee_id FK "→ people.employee; optional"
+    timestamp approved_at "optional"
+    numeric max_marks "optional"
+    int duration_minutes "optional"
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_question_bank_item["exam.question_bank_item"] {
+    uuid id PK
+    uuid course_id FK "→ academic.course"
+    uuid course_outcome_id FK "→ academic.course_outcome; optional"
+    int bloom_level_id FK "→ ref.bloom_level; optional"
+    int question_difficulty_id FK "→ ref.question_difficulty"
+    int question_type_id FK "→ ref.question_type"
+    text question_text
+    numeric marks
+    uuid created_by_employee_id FK "→ people.employee"
+    uuid reviewed_by_employee_id FK "→ people.employee; optional"
+    timestamp reviewed_at "optional"
+    bool is_active
+  }
+  t_question_paper_item["exam.question_paper_item"] {
+    uuid question_paper_id PK, FK
+    text question_no PK
+    uuid question_bank_item_id FK, UK
+    numeric marks
+  }
+  t_question_mark["exam.question_mark"] {
+    uuid exam_registration_id PK, FK "→ exam_registration"
+    uuid question_paper_id PK, FK
+    text question_no PK, FK
+    numeric marks
+    uuid entered_by_employee_id FK "→ people.employee"
+    timestamp entered_at
+  }
+  t_question_paper_item ||--o{ t_question_mark : "question_paper_id, question_no"
+  t_paper_setter_assignment |o--o{ t_question_paper : "moderated_by_assignment_id"
+  t_paper_setter_assignment |o--o{ t_question_paper : "submitted_by_assignment_id"
+  t_question_bank_item ||--o{ t_question_paper_item : "question_bank_item_id"
+  t_question_paper ||--o{ t_question_paper_item : "question_paper_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,86 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_booking_policy["facility.booking_policy"] {
+    uuid id PK
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    daterange valid
+    int min_duration_minutes
+    int max_advance_days
+    int self_cancel_until_minutes_before
+    int no_show_grace_minutes
+    int checkin_opens_minutes_before
+    text note "optional"
+  }
+  t_booking_restriction["facility.booking_restriction"] {
+    uuid id PK
+    uuid person_id FK "→ people.person"
+    int facility_resource_kind_id FK "→ ref.facility_resource_kind; optional"
+    int booking_restriction_reason_id FK "→ ref.booking_restriction_reason"
+    text note "optional"
+    tsrange valid
+    uuid imposed_by_account_id FK "→ iam.user_account"
+  }
+  t_event_request["facility.event_request"] {
+    uuid id PK
+    text title
+    uuid organiser_person_id FK "→ people.person"
+    uuid on_behalf_org_unit_id FK "→ org.org_unit"
+    int event_kind_id FK "→ ref.event_kind"
+    tsrange during
+    int expected_attendance "optional"
+    text note "optional"
+    uuid instance_id FK, UK "→ wf.approval_instance"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_booking_group["facility.booking_group"] {
+    uuid id PK
+    text group_ref UK
+  }
+  t_booking_request["facility.booking_request"] {
+    uuid id PK
+    uuid booking_group_id FK "optional"
+    uuid event_request_id FK "optional"
+    uuid requester_person_id FK "→ people.person"
+    uuid on_behalf_org_unit_id FK "→ org.org_unit; optional"
+    int booking_purpose_id FK "→ ref.booking_purpose"
+    text title
+    int expected_headcount "optional"
+    text note "optional"
+    uuid instance_id FK, UK "→ wf.approval_instance; optional"
+    uuid rescheduled_from_occurrence_id FK "optional"
+  }
+  t_booking_requirement["facility.booking_requirement"] {
+    uuid booking_request_id PK, FK
+    int room_feature_id PK, FK "→ ref.room_feature"
+  }
+  t_booking_occurrence["facility.booking_occurrence"] {
+    uuid id PK
+    uuid booking_request_id FK
+    uuid room_id FK "→ org.room"
+    tsrange during
+    int setup_minutes
+    int teardown_minutes
+    timestamp checked_in_at "optional"
+    uuid checked_in_by_account_id FK "→ iam.user_account; optional"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+    int booking_cancel_reason_id FK "→ ref.booking_cancel_reason; optional"
+  }
+  t_booking_request ||--o{ t_booking_occurrence : "booking_request_id"
+  t_booking_group |o--o{ t_booking_request : "booking_group_id"
+  t_event_request |o--o{ t_booking_request : "event_request_id"
+  t_booking_occurrence |o--o{ t_booking_request : "rescheduled_from_occurrence_id"
+  t_booking_request ||--o{ t_booking_requirement : "booking_request_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

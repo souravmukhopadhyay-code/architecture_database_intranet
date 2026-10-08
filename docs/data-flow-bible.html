@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SGT Data Flow Bible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: an engineering schematic. One wide diagram up top, then the rules as a numbered
+   code everyone can cite ("rule 7"), then reference tables. Write side blue, lake teal,
+   access gate ochre, "never leaves" red. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --surface-2: #e9eeec;
+  --ink: #15222b;
+  --muted: #56646d;
+  --line: #c6d0d0;
+  --write: #1d5d8a;
+  --write-soft: #e3eef6;
+  --read: #0b7466;
+  --read-soft: #def2ee;
+  --gate: #94600a;
+  --gate-soft: #f6ecd8;
+  --never: #b0352a;
+  --never-soft: #f9e5e2;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1518; --surface: #152025; --surface-2: #1a282e; --ink: #e2ebed; --muted: #9aacb3;
+    --line: #2d3e45; --write: #74b4e2; --write-soft: #15293a; --read: #4fc6b1; --read-soft: #0f2c29;
+    --gate: #e2ac52; --gate-soft: #2e2512; --never: #f08074; --never-soft: #33191a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1518; --surface: #152025; --surface-2: #1a282e; --ink: #e2ebed; --muted: #9aacb3;
+  --line: #2d3e45; --write: #74b4e2; --write-soft: #15293a; --read: #4fc6b1; --read-soft: #0f2c29;
+  --gate: #e2ac52; --gate-soft: #2e2512; --never: #f08074; --never-soft: #33191a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  padding-block: 40px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.65rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--surface-2); padding: 0.05em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--write); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--write); outline-offset: 2px; border-radius: 3px; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- header ---------- */
+header { display: flex; flex-direction: column; gap: 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.meta span b { color: var(--ink); font-weight: 500; }
+.lede { max-width: 66ch; font-size: 1.06rem; color: var(--muted); }
+.creed {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  margin-top: 6px;
+}
+.creed div { padding: 16px 18px 18px 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.creed div + div { padding-left: 18px; border-left: 1px solid var(--line); }
+.creed .k { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; }
+.creed .k.w { color: var(--write); } .creed .k.r { color: var(--read); } .creed .k.g { color: var(--gate); }
+.creed p { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; line-height: 1.25; }
+
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; }
+nav.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+nav.toc a:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ---------- sections ---------- */
+section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 16px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+/* ---------- diagram ---------- */
+.diagram-frame {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.diagram-frame svg { display: block; width: 100%; min-width: 1060px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 22px; height: 12px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.sw.w { background: var(--write-soft); border-color: var(--write); }
+.sw.p { background: transparent; border-color: var(--write); border-style: dashed; }
+.sw.r { background: var(--read-soft); border-color: var(--read); }
+.sw.g { background: var(--gate-soft); border-color: var(--gate); }
+.sw.n { background: var(--never-soft); border-color: var(--never); }
+.scroll-hint { display: none; font-size: 13px; color: var(--muted); }
+
+svg text { font-family: var(--font-body); }
+.s-zone { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em; fill: var(--muted); }
+.s-lab { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; fill: var(--muted); }
+.s-t { font-size: 13.5px; font-weight: 600; fill: var(--ink); }
+.s-s { font-size: 11.5px; fill: var(--muted); }
+.s-c { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; fill: var(--write); }
+.s-c.n { fill: var(--never); }
+.s-ret { font-size: 12px; font-weight: 500; fill: var(--gate); }
+.s-strip { font-size: 12.5px; fill: var(--ink); }
+.s-strip b { font-weight: 600; }
+.g-grp { fill: var(--surface-2); stroke: var(--line); }
+.g-w { fill: var(--write-soft); stroke: var(--write); stroke-width: 1.4; }
+.g-plan { stroke-dasharray: 5 4; }
+.g-db { fill: var(--surface); stroke: var(--write); stroke-width: 2; }
+.g-chip { fill: var(--surface); stroke: var(--write); stroke-width: 1; }
+.g-chip.n { fill: var(--never-soft); stroke: var(--never); }
+.g-r { fill: var(--read-soft); stroke: var(--read); stroke-width: 1.4; }
+.g-lake { fill: none; stroke: var(--read); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.g-gate { fill: var(--gate-soft); stroke: var(--gate); stroke-width: 1.6; }
+.g-cell { fill: var(--surface); stroke: var(--gate); stroke-width: 1; }
+.g-strip { fill: var(--never-soft); stroke: var(--never); stroke-width: 1; }
+.g-arrow { fill: none; stroke: var(--muted); stroke-width: 1.6; }
+.g-ret { fill: none; stroke: var(--gate); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.g-div { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.m-arrow { fill: var(--muted); }
+.m-gate { fill: var(--gate); }
+
+/* ---------- steps (read the diagram in order) ---------- */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 28px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 2px 10px; font-size: 14px; color: var(--muted); }
+.steps li::before { content: counter(s); grid-row: span 2; font-family: var(--font-mono); font-weight: 500; font-size: 13px; color: var(--ink); width: 24px; height: 24px; border: 1.5px solid var(--ink); border-radius: 50%; display: grid; place-items: center; }
+.steps li b { color: var(--ink); font-weight: 600; }
+
+/* ---------- trace ---------- */
+.trace { display: grid; grid-template-columns: minmax(0, 1fr); border-left: 2px solid var(--read); margin-left: 6px; }
+.trace > div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 14px; padding: 8px 0 8px 18px; position: relative; }
+.trace > div::before { content: ""; position: absolute; left: -6px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--read); }
+.trace time { font-family: var(--font-mono); font-size: 13px; color: var(--read); padding-top: 1px; font-variant-numeric: tabular-nums; }
+.trace p { max-width: 78ch; }
+.note { font-size: 13.5px; color: var(--muted); max-width: 80ch; }
+
+/* ---------- rules ---------- */
+.rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; counter-reset: r; }
+.rules li { counter-increment: r; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 0 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.rules li::before { content: counter(r, decimal-leading-zero); font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; line-height: 1; color: var(--line); padding-top: 2px; }
+.rules li.never::before { color: var(--never); }
+.rules h3 { margin-bottom: 4px; }
+.rules p { font-size: 14px; color: var(--muted); }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; vertical-align: 2px; margin-left: 6px; }
+.tag.never { color: var(--never); background: var(--never-soft); }
+.tag.plan { color: var(--write); border: 1px dashed var(--write); }
+.tag.dec { color: var(--gate); background: var(--gate-soft); }
+
+/* ---------- tables ---------- */
+.table-frame { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--surface-2); white-space: nowrap; }
+td:first-child { font-weight: 500; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.owners { min-width: 860px; }
+.yes { color: var(--read); font-weight: 500; }
+.no { color: var(--never); font-weight: 500; }
+.part { color: var(--gate); font-weight: 500; }
+
+/* ---------- three gates ---------- */
+.gates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1.5px solid var(--gate); border-radius: 12px; overflow: hidden; background: var(--gate-soft); }
+.gates > div { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.gates > div + div { border-left: 1px solid var(--gate); }
+.gates .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--gate); text-transform: uppercase; }
+.gates p { font-size: 14px; }
+.gates p.src { font-size: 13px; color: var(--muted); }
+
+.viewers { min-width: 760px; }
+.viewers td:not(:first-child) { color: var(--muted); }
+.viewers td b { color: var(--ink); font-weight: 500; }
+
+/* ---------- privacy grid ---------- */
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+.pgrid > div { padding: 14px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pgrid h3 { font-size: 1.02rem; }
+.pgrid p { font-size: 14px; color: var(--muted); }
+.pgrid .first h3 { color: var(--never); }
+
+/* ---------- open decisions ---------- */
+.open { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
+.open li { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border: 1px dashed var(--gate); border-radius: 8px; min-width: 0; }
+.open li b { font-weight: 600; }
+.open li span { font-size: 14px; color: var(--muted); }
+.open li i { font-style: normal; font-family: var(--font-mono); font-size: 11.5px; color: var(--gate); }
+
+footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+
+@media (max-width: 860px) {
+  .creed, .gates { grid-template-columns: minmax(0, 1fr); }
+  .creed div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .gates > div + div { border-left: 0; border-top: 1px solid var(--gate); }
+  .rules, .open { grid-template-columns: minmax(0, 1fr); }
+  .pgrid { grid-template-columns: minmax(0, 1fr); }
+  .scroll-hint { display: block; }
+}
+@media (max-width: 520px) {
+  .wrap { padding-inline: 16px; gap: 44px; }
+  .trace > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="meta eyebrow">
+    <span>SGT University · Data platform</span>
+    <span>Version <b>0.1 · draft for team review</b></span>
+    <span>Dated <b>1 Oct 2026</b></span>
+  </div>
+  <h1>Data Flow Bible</h1>
+  <p class="lede">How data moves between our applications, the central database, the data lake and the dashboards. Every design, pull request and vendor integration follows this page. If something needs to break a rule, the team changes the page first.</p>
+  <div class="creed">
+    <div><span class="k w">Write</span><p>Every app writes to one PostgreSQL database.</p></div>
+    <div><span class="k r">Read</span><p>The data lake reads only from that database.</p></div>
+    <div><span class="k g">See</span><p>People see only what their role, scope and clearance allow.</p></div>
+  </div>
+  <nav class="toc" aria-label="Sections">
+    <a href="#flow">The flow</a>
+    <a href="#trace">One record, end to end</a>
+    <a href="#rules">Golden rules</a>
+    <a href="#owners">Who owns what</a>
+    <a href="#access">Access: role, scope, mask</a>
+    <a href="#privacy">Personal data (DPDP)</a>
+    <a href="#freshness">Freshness and failure</a>
+    <a href="#open">Open decisions</a>
+    <a href="#options">Lake options</a>
+  </nav>
+</header>
+
+<!-- ================= DIAGRAM ================= -->
+<section id="flow" aria-labelledby="flow-h">
+  <div class="sec-head">
+    <h2 id="flow-h">The flow</h2>
+    <p>The left half runs the university day to day. The right half only reads. The one crossing point is the change stream from the read replica.</p>
+  </div>
+  <p class="scroll-hint">Scroll the diagram sideways to see all of it.</p>
+  <div class="diagram-frame">
+<svg viewBox="0 0 1420 652" role="img" aria-labelledby="dg-t dg-d">
+  <title id="dg-t">Data flow from apps to dashboards</title>
+  <desc id="dg-d">Intranet, HRMS and CourseAI write directly to the central PostgreSQL database. Biometric devices, Google and Microsoft 365, the LMS and the University CRM go through an integration gateway. A change stream reads the read replica and loads the data lake in three layers: bronze, silver and gold. Every dashboard query passes an RBAC layer that checks role, scope and masking before the dashboards inside the Intranet show it. Actions go back through the app's API.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-gate" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+
+  <!-- zones -->
+  <text class="s-zone" x="20" y="24">WRITE SIDE · LIVE OPERATIONS (OLTP)</text>
+  <text class="s-zone" x="720" y="24">READ SIDE · ANALYTICS</text>
+  <line class="g-div" x1="700" y1="70" x2="700" y2="572"/>
+  <text class="s-lab" x="700" y="584" text-anchor="middle">ONE WAY</text>
+
+  <!-- return path -->
+  <path class="g-ret" d="M1325 114 V60 H120 V78" marker-end="url(#ahg)"/>
+  <text class="s-ret" x="712" y="52" text-anchor="middle">Act on it, or open a named person: back through the app's API. The lake is read-only.</text>
+
+  <!-- in-house apps -->
+  <rect class="g-grp" x="20" y="80" width="200" height="226" rx="10"/>
+  <text class="s-lab" x="34" y="102">IN-HOUSE APPS · DIRECT</text>
+  <rect class="g-w" x="32" y="114" width="176" height="82" rx="7"/>
+  <text class="s-t" x="44" y="135">Intranet</text>
+  <text class="s-s" x="44" y="153">All UMS modules:</text>
+  <text class="s-s" x="44" y="168">academic, exam, research,</text>
+  <text class="s-s" x="44" y="183">facility, tms, events, wf</text>
+  <rect class="g-w" x="32" y="204" width="176" height="42" rx="7"/>
+  <text class="s-t" x="44" y="222">HRMS</text>
+  <text class="s-s" x="44" y="238">employees, leave, payroll</text>
+  <rect class="g-w" x="32" y="254" width="176" height="42" rx="7"/>
+  <text class="s-t" x="44" y="272">CourseAI</text>
+  <text class="s-s" x="44" y="288">learning content, AI tutor</text>
+
+  <path class="g-arrow" d="M208 155 H443" marker-end="url(#ah)"/>
+  <path class="g-arrow" d="M208 225 H443" marker-end="url(#ah)"/>
+  <path class="g-arrow" d="M208 275 H443" marker-end="url(#ah)"/>
+  <text class="s-s" x="330" y="185" text-anchor="middle">direct connection</text>
+  <text class="s-s" x="330" y="200" text-anchor="middle">own schema · own DB role</text>
+
+  <!-- outside systems -->
+  <rect class="g-grp" x="20" y="330" width="200" height="232" rx="10"/>
+  <text class="s-lab" x="34" y="352">OUTSIDE SYSTEMS · VIA API</text>
+  <rect class="g-w" x="32" y="364" width="176" height="40" rx="7"/>
+  <text class="s-t" x="44" y="381">Biometric devices</text>
+  <text class="s-s" x="44" y="396">staff punches</text>
+  <rect class="g-w" x="32" y="412" width="176" height="40" rx="7"/>
+  <text class="s-t" x="44" y="429">Google / MS 365</text>
+  <text class="s-s" x="44" y="444">SSO, directory sync</text>
+  <rect class="g-w" x="32" y="460" width="176" height="40" rx="7"/>
+  <text class="s-t" x="44" y="477">LMS</text>
+  <text class="s-s" x="44" y="492">course activity</text>
+  <rect class="g-w g-plan" x="32" y="508" width="176" height="40" rx="7"/>
+  <text class="s-t" x="44" y="525">University CRM</text>
+  <text class="s-s" x="44" y="540">own DB, syncs through API</text>
+
+  <path class="g-arrow" d="M208 384 H253" marker-end="url(#ah)"/>
+  <path class="g-arrow" d="M208 432 H253" marker-end="url(#ah)"/>
+  <path class="g-arrow" d="M208 480 H253" marker-end="url(#ah)"/>
+  <path class="g-arrow" d="M208 528 H253" marker-end="url(#ah)"/>
+
+  <!-- gateway -->
+  <rect class="g-w" x="255" y="364" width="150" height="184" rx="8"/>
+  <text class="s-t" x="268" y="386">Integration</text>
+  <text class="s-t" x="268" y="403">gateway</text>
+  <text class="s-s" x="268" y="425">DRF ingest API</text>
+  <text class="s-s" x="268" y="442">authenticates source</text>
+  <text class="s-s" x="268" y="459">validates, de-dupes</text>
+  <text class="s-s" x="268" y="476">retries, dead-letter</text>
+  <text class="s-s" x="268" y="493">writes into the</text>
+  <text class="s-s" x="268" y="508">owner's schema</text>
+  <path class="g-arrow" d="M405 440 H443" marker-end="url(#ah)"/>
+
+  <!-- central db -->
+  <rect class="g-db" x="445" y="80" width="235" height="390" rx="10"/>
+  <text class="s-t" x="459" y="104">Central PostgreSQL</text>
+  <text class="s-s" x="459" y="121">the system of record</text>
+
+  <text class="s-lab" x="459" y="146">SHARED FOUNDATION</text>
+  <rect class="g-chip" x="459" y="154" width="35" height="22" rx="4"/><text class="s-c" x="476.5" y="169" text-anchor="middle">ref</text>
+  <rect class="g-chip" x="500" y="154" width="35" height="22" rx="4"/><text class="s-c" x="517.5" y="169" text-anchor="middle">org</text>
+  <rect class="g-chip" x="541" y="154" width="55" height="22" rx="4"/><text class="s-c" x="568.5" y="169" text-anchor="middle">people</text>
+  <rect class="g-chip" x="602" y="154" width="49" height="22" rx="4"/><text class="s-c" x="626.5" y="169" text-anchor="middle">authz</text>
+  <rect class="g-chip" x="459" y="182" width="28" height="22" rx="4"/><text class="s-c" x="473" y="197" text-anchor="middle">wf</text>
+  <rect class="g-chip" x="493" y="182" width="42" height="22" rx="4"/><text class="s-c" x="514" y="197" text-anchor="middle">util</text>
+  <rect class="g-chip n" x="541" y="182" width="35" height="22" rx="4"/><text class="s-c n" x="558.5" y="197" text-anchor="middle">pii</text>
+  <rect class="g-chip n" x="582" y="182" width="35" height="22" rx="4"/><text class="s-c n" x="599.5" y="197" text-anchor="middle">iam</text>
+  <rect class="g-chip n" x="459" y="210" width="62" height="22" rx="4"/><text class="s-c n" x="490" y="225" text-anchor="middle">privacy</text>
+  <rect class="g-chip n" x="527" y="210" width="49" height="22" rx="4"/><text class="s-c n" x="551.5" y="225" text-anchor="middle">audit</text>
+
+  <text class="s-lab" x="459" y="256">INTRANET MODULES</text>
+  <rect class="g-chip" x="459" y="264" width="69" height="22" rx="4"/><text class="s-c" x="493.5" y="279" text-anchor="middle">academic</text>
+  <rect class="g-chip" x="534" y="264" width="42" height="22" rx="4"/><text class="s-c" x="555" y="279" text-anchor="middle">exam</text>
+  <rect class="g-chip" x="582" y="264" width="69" height="22" rx="4"/><text class="s-c" x="616.5" y="279" text-anchor="middle">research</text>
+  <rect class="g-chip" x="459" y="292" width="69" height="22" rx="4"/><text class="s-c" x="493.5" y="307" text-anchor="middle">facility</text>
+  <rect class="g-chip" x="534" y="292" width="35" height="22" rx="4"/><text class="s-c" x="551.5" y="307" text-anchor="middle">tms</text>
+  <rect class="g-chip" x="575" y="292" width="55" height="22" rx="4"/><text class="s-c" x="602.5" y="307" text-anchor="middle">events</text>
+
+  <text class="s-lab" x="459" y="340">HRMS</text>
+  <rect class="g-chip g-plan" x="459" y="348" width="42" height="22" rx="4"/><text class="s-c" x="480" y="363" text-anchor="middle">hrms</text>
+  <text class="s-lab" x="560" y="340">COURSEAI</text>
+  <rect class="g-chip g-plan" x="560" y="348" width="69" height="22" rx="4"/><text class="s-c" x="594.5" y="363" text-anchor="middle">courseai</text>
+
+  <text class="s-s" x="459" y="404">Each app writes only its own</text>
+  <text class="s-s" x="459" y="420">schema and reads the others</text>
+  <text class="s-s" x="459" y="436">through views and grants.</text>
+
+  <path class="g-arrow" d="M562 470 V492" marker-end="url(#ah)"/>
+  <rect class="g-w" x="445" y="494" width="235" height="62" rx="8"/>
+  <text class="s-t" x="459" y="517">Read replica</text>
+  <text class="s-s" x="459" y="535">CDC reads here, never the primary</text>
+
+  <!-- CDC -->
+  <path class="g-arrow" d="M680 525 H716" marker-end="url(#ah)"/>
+  <rect class="g-r" x="718" y="420" width="140" height="140" rx="8"/>
+  <text class="s-t" x="731" y="442">CDC stream</text>
+  <text class="s-s" x="731" y="462">logical replication</text>
+  <text class="s-s" x="731" y="478">allow-listed tables</text>
+  <text class="s-s" x="731" y="494">personal data is</text>
+  <text class="s-s" x="731" y="510">never published</text>
+  <text class="s-s" x="731" y="526">contract check,</text>
+  <text class="s-s" x="731" y="542">fails closed</text>
+
+  <!-- lake -->
+  <path class="g-arrow" d="M858 500 H888" marker-end="url(#ah)"/>
+  <rect class="g-lake" x="878" y="80" width="172" height="480" rx="10"/>
+  <text class="s-lab" x="892" y="102">DATA LAKE</text>
+  <rect class="g-r" x="890" y="114" width="148" height="150" rx="7"/>
+  <text class="s-t" x="902" y="134">GOLD · marts</text>
+  <text class="s-s" x="902" y="154">student 360</text>
+  <text class="s-s" x="902" y="170">attendance &amp; results</text>
+  <text class="s-s" x="902" y="186">HR headcount, leave</text>
+  <text class="s-s" x="902" y="202">course engagement</text>
+  <text class="s-s" x="902" y="218">tickets, rooms, events</text>
+  <text class="s-s" x="902" y="234">approval turnaround</text>
+  <path class="g-arrow" d="M964 304 V266" marker-end="url(#ah)"/>
+  <rect class="g-r" x="890" y="304" width="148" height="108" rx="7"/>
+  <text class="s-t" x="902" y="324">SILVER · clean</text>
+  <text class="s-s" x="902" y="344">typed, de-duplicated</text>
+  <text class="s-s" x="902" y="360">people become tokens</text>
+  <text class="s-s" x="902" y="376">erasures applied</text>
+  <text class="s-s" x="902" y="392">history as date ranges</text>
+  <path class="g-arrow" d="M964 452 V414" marker-end="url(#ah)"/>
+  <rect class="g-r" x="890" y="452" width="148" height="96" rx="7"/>
+  <text class="s-t" x="902" y="472">BRONZE · raw</text>
+  <text class="s-s" x="902" y="492">1:1 copy of each table</text>
+  <text class="s-s" x="902" y="508">append-only</text>
+  <text class="s-s" x="902" y="524">kept for a set window</text>
+
+  <!-- RBAC -->
+  <path class="g-arrow" d="M1038 190 H1070" marker-end="url(#ah)"/>
+  <rect class="g-gate" x="1072" y="114" width="152" height="300" rx="8"/>
+  <text class="s-t" x="1084" y="136">RBAC access layer</text>
+  <rect class="g-cell" x="1084" y="148" width="128" height="66" rx="5"/>
+  <text class="s-lab" x="1094" y="168">1 · ROLE</text>
+  <text class="s-s" x="1094" y="185">which dashboards</text>
+  <text class="s-s" x="1094" y="200">and metrics</text>
+  <rect class="g-cell" x="1084" y="222" width="128" height="66" rx="5"/>
+  <text class="s-lab" x="1094" y="242">2 · SCOPE</text>
+  <text class="s-s" x="1094" y="259">which rows: campus,</text>
+  <text class="s-s" x="1094" y="274">school, department</text>
+  <rect class="g-cell" x="1084" y="296" width="128" height="66" rx="5"/>
+  <text class="s-lab" x="1094" y="316">3 · MASK</text>
+  <text class="s-s" x="1094" y="333">which columns:</text>
+  <text class="s-s" x="1094" y="348">salary, marks, IDs</text>
+  <text class="s-s" x="1084" y="384">roles read live from</text>
+  <text class="s-s" x="1084" y="400">authz; unmasks logged</text>
+
+  <!-- dashboards -->
+  <path class="g-arrow" d="M1224 264 H1248" marker-end="url(#ah)"/>
+  <rect class="g-w" x="1250" y="114" width="150" height="300" rx="8"/>
+  <text class="s-t" x="1262" y="136">Dashboards</text>
+  <text class="s-s" x="1262" y="156">inside the Intranet</text>
+  <text class="s-s" x="1262" y="172">analytics API (DRF)</text>
+  <text class="s-s" x="1262" y="188">reads Gold only</text>
+  <text class="s-s" x="1262" y="204">shows "data as of"</text>
+  <text class="s-lab" x="1262" y="240">WHO LOOKS</text>
+  <text class="s-s" x="1262" y="260">VC, registrar</text>
+  <text class="s-s" x="1262" y="276">deans, HoDs</text>
+  <text class="s-s" x="1262" y="292">HR, IQAC, DPO</text>
+  <text class="s-s" x="1262" y="308">faculty, students</text>
+
+  <!-- DPDP strip -->
+  <rect class="g-strip" x="20" y="598" width="1380" height="44" rx="8"/>
+  <text class="s-strip" x="710" y="625" text-anchor="middle"><tspan font-weight="600">DPDP Act 2023 at every hop: </tspan>purpose and consent · collect the minimum · personal data stays in the DB · people are tokens · mask by role · replay erasures · log every unmasked view</text>
+</svg>
+  </div>
+  <div class="legend">
+    <span><i class="sw w"></i>Write side, built or in use</span>
+    <span><i class="sw p"></i>Planned schema or system</span>
+    <span><i class="sw r"></i>Read side (lake)</span>
+    <span><i class="sw g"></i>Access control</span>
+    <span><i class="sw n"></i>Never leaves the central database</span>
+  </div>
+
+  <ol class="steps">
+    <li><b>Apps write directly.</b>Intranet, HRMS and CourseAI each use their own schema and DB role in the central PostgreSQL.</li>
+    <li><b>Outside systems post to the gateway.</b>Devices, SSO, the LMS and the CRM never get a database login.</li>
+    <li><b>The replica copies the primary.</b>Analytics load never slows down admissions day or result day.</li>
+    <li><b>CDC streams the changes.</b>Only allow-listed tables are published. Personal data and secrets are not.</li>
+    <li><b>The lake refines in three layers.</b>Bronze keeps the raw copy, Silver cleans and tokenises, Gold answers business questions.</li>
+    <li><b>RBAC filters every query.</b>Role, then scope, then mask, using the same roles as the apps.</li>
+    <li><b>Dashboards show the result.</b>Anything you do about it goes back through the app.</li>
+  </ol>
+</section>
+
+<!-- ================= TRACE ================= -->
+<section id="trace" aria-labelledby="trace-h">
+  <div class="sec-head">
+    <h2 id="trace-h">One record, end to end</h2>
+    <p>An assistant professor in the CSE department punches in at the Block A biometric device. Times match the proposed freshness targets.</p>
+  </div>
+  <div class="trace">
+    <div><time>09:02:10</time><p>The device posts the punch to the <b>integration gateway</b> with its device key. The gateway checks the key, drops a duplicate punch sent 3 seconds later (same idempotency key) and writes one row to the HRMS punch table in the <code>hrms</code> schema.</p></div>
+    <div><time>09:02:11</time><p>The row reaches the <b>read replica</b>. Nobody else has touched the primary.</p></div>
+    <div><time>09:03</time><p><b>CDC</b> reads the change from the replica. The table is on the allow-list, so the change goes to <b>Bronze</b> as an exact copy.</p></div>
+    <div><time>09:10</time><p><b>Silver</b> types and de-duplicates the row and replaces the employee id with a stable lake token. No name or phone number exists in the lake.</p></div>
+    <div><time>09:15</time><p><b>Gold</b> refreshes "staff attendance by department, by day".</p></div>
+    <div><time>09:20</time><p>The <b>HoD of CSE</b> opens the dashboard. The role gate lets them see it. The scope gate limits it to CSE. The mask gate hides salary. To see who is late, they click a row. The Intranet resolves the token, checks the HoD's permission on that person and writes <code>pii_access_log</code>.</p></div>
+  </div>
+</section>
+
+<!-- ================= RULES ================= -->
+<section id="rules" aria-labelledby="rules-h">
+  <div class="sec-head">
+    <h2 id="rules-h">Golden rules</h2>
+    <p>Cite them by number in design reviews and pull requests ("breaks rule 6"). Rules marked in red are hard stops.</p>
+  </div>
+  <ol class="rules">
+    <li><div><h3>One owner per record</h3><p>Each kind of record has exactly one system that creates and changes it (see <a href="#owners">Who owns what</a>). Every other system reads it.</p></div></li>
+    <li><div><h3>In-house apps connect directly</h3><p>Intranet, HRMS and CourseAI use the central PostgreSQL. Each has its own schema and its own database role, with only the grants it needs.</p></div></li>
+    <li class="never"><div><h3>An app writes only its own schema <span class="tag never">hard stop</span></h3><p>To change another app's data, call that app's API or raise a <code>wf</code> approval. Reading across schemas goes through views and grants.</p></div></li>
+    <li class="never"><div><h3>Outside systems never touch the database <span class="tag never">hard stop</span></h3><p>Devices, Google / MS 365, the LMS and the University CRM post to the integration gateway. The gateway authenticates the source, validates and de-duplicates, then writes into the owning schema.</p></div></li>
+    <li><div><h3>One shared foundation</h3><p>People, org units, accounts, roles, approvals, consent and audit exist once (<code>org</code>, <code>people</code>, <code>iam</code>, <code>authz</code>, <code>wf</code>, <code>privacy</code>, <code>audit</code>). No app keeps its own copy of a person, a department or a role.</p></div></li>
+    <li class="never"><div><h3>The lake reads only from the central database <span class="tag never">hard stop</span></h3><p>Through CDC from the read replica, never the primary. Nothing writes into the lake directly: no app, device, vendor or spreadsheet upload. Data from outside lands in the database first.</p></div></li>
+    <li class="never"><div><h3>Personal data stays home <span class="tag never">hard stop</span></h3><p><code>pii</code>, <code>iam</code>, <code>privacy</code>, <code>audit</code>, names and the confidential tables are not published to CDC. In the lake, a person is a token.</p></div></li>
+    <li class="never"><div><h3>Dashboards never query the live database <span class="tag never">hard stop</span></h3><p>They read Gold through the analytics API. If the lake is late, the dashboard says so. It does not fall back to the live database.</p></div></li>
+    <li><div><h3>Every read passes the RBAC layer</h3><p>Role, then scope, then mask, on every query. Nobody gets raw SQL on the lake. Analysts get a scoped, masked role like everyone else.</p></div></li>
+    <li><div><h3>Roles are defined once, in authz</h3><p>The lake and the dashboards use the same roles, permissions and org scopes as the apps. There is no second permission list to keep in step.</p></div></li>
+    <li><div><h3>Numbers come from the lake, names come from the app</h3><p>A dashboard shows counts, rates and tokens. Opening a named person goes back to the Intranet, which checks the permission and logs the access.</p></div></li>
+    <li><div><h3>The lake is read-only for actions</h3><p>Flagging a student, raising a ticket or starting an approval goes through the app's API, which writes the central database. A lake job never writes back.</p></div></li>
+    <li><div><h3>A schema change is a contract change</h3><p>A new or renamed column updates the data dictionary, <code>privacy.data_element</code> and the CDC allow-list in the same change. CDC drops columns it does not know until they are registered.</p></div></li>
+    <li><div><h3>No hard-coded policy</h3><p>Freshness targets, masking rules, the small-number threshold and retention windows are rows an administrator can edit. They are never constants in code.</p></div></li>
+  </ol>
+</section>
+
+<!-- ================= OWNERS ================= -->
+<section id="owners" aria-labelledby="owners-h">
+  <div class="sec-head">
+    <h2 id="owners-h">Who owns what</h2>
+    <p>The owner is the only system that creates and changes the record. Rows marked <span class="tag plan">planned</span> are proposals for the team to confirm.</p>
+  </div>
+  <div class="table-frame">
+    <table class="owners">
+      <thead><tr><th>Data</th><th>Owner (writes)</th><th>Lives in</th><th>Read by</th><th>In the lake</th></tr></thead>
+      <tbody>
+        <tr><td>Campuses, schools, departments, positions</td><td>Intranet (admin)</td><td><code>org</code></td><td>every app</td><td class="yes">Yes</td></tr>
+        <tr><td>Person: name, contacts, ID documents</td><td>Intranet foundation</td><td><code>people</code>, <code>pii</code></td><td>every app, through views</td><td class="part">Token only</td></tr>
+        <tr><td>Login accounts and SSO links</td><td>Intranet (<code>iam</code>). Google / MS 365 verify identity</td><td><code>iam</code></td><td>every app (single sign-on)</td><td class="no">No</td></tr>
+        <tr><td>Roles, permissions, org scopes</td><td>Intranet (<code>authz</code>)</td><td><code>authz</code></td><td>every app, RBAC layer</td><td class="yes">Yes, drives RBAC</td></tr>
+        <tr><td>Approvals</td><td><code>wf</code> engine, used by every app</td><td><code>wf</code></td><td>every app</td><td class="part">Yes, without comments</td></tr>
+        <tr><td>Programmes, courses, curriculum, timetable</td><td>Intranet</td><td><code>academic</code></td><td>CourseAI, HRMS (workload)</td><td class="yes">Yes</td></tr>
+        <tr><td>Students: enrolment, lifecycle, class attendance</td><td>Intranet</td><td><code>academic</code></td><td>CourseAI</td><td class="part">Yes, tokenised</td></tr>
+        <tr><td>Exams, results, certificates</td><td>Intranet</td><td><code>exam</code></td><td>CourseAI (results)</td><td class="part">Yes, marks masked</td></tr>
+        <tr><td>Research degrees</td><td>Intranet</td><td><code>research</code></td><td>HRMS (supervisor load)</td><td class="part">Yes, tokenised</td></tr>
+        <tr><td>Helpdesk, rooms and transport, clubs and events</td><td>Intranet</td><td><code>tms</code>, <code>facility</code>, <code>events</code></td><td>every app (raise a ticket, book a room)</td><td class="part">Statistics only</td></tr>
+        <tr><td>Employees: joining, leave, payroll, separation <span class="tag plan">planned</span></td><td>HRMS</td><td><code>people.employee</code> + <code>hrms</code></td><td>Intranet</td><td class="part">Yes, salary masked</td></tr>
+        <tr><td>Staff biometric punches <span class="tag plan">planned</span></td><td>HRMS, through the gateway</td><td><code>hrms</code></td><td>Intranet (HoD view)</td><td class="part">Yes, tokenised</td></tr>
+        <tr><td>Learning content and AI tutor activity <span class="tag plan">planned</span></td><td>CourseAI</td><td><code>courseai</code></td><td>Intranet (progress)</td><td class="part">Aggregates (see minors)</td></tr>
+        <tr><td>Leads, enquiries, applicants <span class="tag plan">planned</span></td><td>University CRM (its own DB)</td><td>CRM. A converted applicant lands through the gateway</td><td>Intranet</td><td class="part">Only after conversion</td></tr>
+        <tr><td>Consent, DPDP requests, breaches</td><td>Intranet (DPO)</td><td><code>privacy</code></td><td>DPO only</td><td class="no">No</td></tr>
+        <tr><td>Audit trail</td><td>The database itself (triggers)</td><td><code>audit</code></td><td>auditors</td><td class="no">No</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= ACCESS ================= -->
+<section id="access" aria-labelledby="access-h">
+  <div class="sec-head">
+    <h2 id="access-h">Access: role, scope, mask</h2>
+    <p>The RBAC layer sits between Gold and every dashboard. It runs three checks in order. Each check reads the same <code>authz</code> tables the apps use.</p>
+  </div>
+  <div class="gates">
+    <div><span class="k">1 · Role</span><p>Which dashboards and metrics you can open at all. A permission such as <code>analytics.staff_attendance.view</code> is granted to a role.</p><p class="src">Source: <code>authz.role_permission</code>, <code>authz.account_role</code></p></div>
+    <div><span class="k">2 · Scope</span><p>Which rows you see. A grant scoped to the School of Engineering with descendants covers every department under it. A global grant covers the university.</p><p class="src">Source: <code>account_role.scope_org_unit_id</code>, <code>include_descendants</code></p></div>
+    <div><span class="k">3 · Mask</span><p>Which columns show in clear. Salary, individual marks and tokens are masked, banded or hidden unless your role is cleared for them. Every unmasked view is logged.</p><p class="src">Source: mask-rule rows (column × permission), edited by the DPO</p></div>
+  </div>
+  <p class="note">Groups smaller than the small-number threshold (proposed: 5 people) show "&lt;5" instead of a count, so nobody can be singled out of a small class or department. Role and scope changes take effect within 60 seconds, because the RBAC layer checks the live <code>authz</code> tables, not the lake's copy.</p>
+
+  <h3>Same dashboard, four viewers</h3>
+  <p class="note">"Faculty attendance and cost". This is an example policy. HR, the registrar and the DPO set the real one.</p>
+  <div class="table-frame">
+    <table class="viewers">
+      <thead><tr><th>Viewer</th><th>Rows (scope)</th><th>Per-person attendance</th><th>Salary</th></tr></thead>
+      <tbody>
+        <tr><td>Vice Chancellor</td><td><b>Whole university</b></td><td>Department totals only</td><td>Total cost per school</td></tr>
+        <tr><td>Dean, School of Engineering</td><td><b>Own school</b> and its departments</td><td>Tokens, open a person through the Intranet</td><td>Hidden</td></tr>
+        <tr><td>HoD, CSE</td><td><b>CSE only</b></td><td>Tokens, open a person through the Intranet</td><td>Hidden</td></tr>
+        <tr><td>HR Manager</td><td><b>Whole university</b></td><td>Tokens, open a person through the Intranet</td><td>In clear, every view logged</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= PRIVACY ================= -->
+<section id="privacy" aria-labelledby="privacy-h">
+  <div class="sec-head">
+    <h2 id="privacy-h">Personal data (DPDP Act 2023)</h2>
+    <p>The university is the data fiduciary for every student, employee and guardian. The lake inherits the controls already built into the database. It does not invent new ones.</p>
+  </div>
+  <div class="pgrid">
+    <div class="first"><h3>Stays out of the lake</h3><p>The <code>pii</code>, <code>iam</code>, <code>privacy</code> and <code>audit</code> schemas, names in <code>people.person</code>, and confidential tables (feedback responses, disciplinary cases, breaks in study, ticket text, answer scripts). The CDC allow-list matches the existing <code>intranet_analytics</code> grants.</p></div>
+    <div><h3>People become tokens</h3><p>Silver replaces each person id with a keyed hash. The key sits in the KMS, not the lake. Only the Intranet can turn a token back into a person, and it logs each lookup in <code>privacy.pii_access_log</code>.</p></div>
+    <div><h3>Masked by role</h3><p>Salary, individual marks and CGPA, attendance per person and leave reasons are masked, banded or hidden unless the role is cleared (gate 3).</p></div>
+    <div><h3>Erasure reaches the lake</h3><p>When <code>privacy.erasure_log</code> records a DELETE or ANONYMISE, CDC carries it to Bronze, Silver and Gold. Bronze history is kept only for a set window, so old copies age out too.</p></div>
+    <div><h3>Consent withdrawn means excluded</h3><p>Marts built on consent-based purposes drop a person as soon as <code>privacy.v_active_consent</code> no longer lists them.</p></div>
+    <div><h3>Children (under 18)</h3><p>No tracking or behavioural monitoring of minors (§9(3)). CourseAI activity for under-18 students is reported as counts only. Whether learning analytics may cover minors at all is a DPO decision.</p></div>
+  </div>
+</section>
+
+<!-- ================= FRESHNESS ================= -->
+<section id="freshness" aria-labelledby="fresh-h">
+  <div class="sec-head">
+    <h2 id="fresh-h">Freshness and failure</h2>
+    <p>Proposed targets. Each one is a settings row, so the team can tune it without a release. Every dashboard shows "data as of" with the time of its last load.</p>
+  </div>
+  <div class="table-frame">
+    <table style="min-width: 820px">
+      <thead><tr><th>Hop</th><th>Target</th><th>Alert when</th><th>If it breaks</th></tr></thead>
+      <tbody>
+        <tr><td>App → central DB</td><td class="num">same transaction</td><td>—</td><td>The app shows the error. Nothing is half-written.</td></tr>
+        <tr><td>Device, SSO, CRM → gateway → DB</td><td class="num">≤ 2 min</td><td class="num">queue &gt; 15 min</td><td>Retries with backoff. Failures go to a dead-letter queue, reviewed daily. Idempotency keys stop duplicates when sources resend.</td></tr>
+        <tr><td>Primary → read replica</td><td class="num">≤ 10 s</td><td class="num">lag &gt; 60 s</td><td>CDC waits. The primary and the apps are unaffected.</td></tr>
+        <tr><td>Replica → Bronze (CDC)</td><td class="num">≤ 2 min</td><td class="num">lag &gt; 10 min</td><td>The replication slot holds the changes. A WAL size cap protects the database disk. If the cap is hit, the slot is dropped and the affected tables are re-snapshotted.</td></tr>
+        <tr><td>Bronze → Silver</td><td class="num">≤ 10 min</td><td class="num">&gt; 30 min</td><td>Rerun. Silver merges by key, so a rerun gives the same result.</td></tr>
+        <tr><td>Silver → Gold, daily-use marts</td><td class="num">≤ 15 min end to end</td><td class="num">&gt; 45 min</td><td>Dashboards keep the last good data with a "stale since 10:40" banner.</td></tr>
+        <tr><td>Silver → Gold, heavy marts (student 360, attrition)</td><td class="num">nightly, by 06:00</td><td class="num">not done by 07:00</td><td>Yesterday's numbers stay up, marked stale.</td></tr>
+        <tr><td>Role or scope change → RBAC</td><td class="num">≤ 60 s</td><td>—</td><td>Checked against live <code>authz</code>, so a revoked role stops working within a minute.</td></tr>
+        <tr><td>Approved erasure → lake</td><td class="num">≤ 7 days</td><td class="num">any overdue</td><td>Reported on the DPO dashboard until it is cleared. The period is a policy value for the DPO to confirm.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= OPEN ================= -->
+<section id="open" aria-labelledby="open-h">
+  <div class="sec-head">
+    <h2 id="open-h">Open decisions</h2>
+    <p>The page is a draft until each of these has an owner and an answer.</p>
+  </div>
+  <ul class="open">
+    <li><i>platform team</i><b>Where the lake runs</b><span>Cloud or self-hosted. Data must stay in India. See the options below.</span></li>
+    <li><i>HR + platform</i><b>HRMS owns employee records</b><span>Confirm that HRMS writes <code>people.employee</code> and the Intranet only reads it.</span></li>
+    <li><i>DPO</i><b>CourseAI and minors</b><span>Whether learning analytics may cover students under 18, and at what level.</span></li>
+    <li><i>admissions + platform</i><b>CRM contract</b><span>Vendor, the fields that cross the gateway, and the moment an applicant becomes a person in the central database.</span></li>
+    <li><i>DPO + HR + registrar</i><b>Who may unmask what</b><span>Sign off the mask rules and the small-number threshold.</span></li>
+    <li><i>team</i><b>Freshness numbers</b><span>Agree on the targets above, or change them. Government portals (AISHE, NIRF, ABC) are not covered on this page yet.</span></li>
+  </ul>
+</section>
+
+<!-- ================= OPTIONS ================= -->
+<section id="options" aria-labelledby="options-h">
+  <div class="sec-head">
+    <h2 id="options-h">Lake options</h2>
+    <p>The design above does not depend on a vendor. These are the usual choices for each part.</p>
+  </div>
+  <div class="table-frame">
+    <table style="min-width: 720px">
+      <thead><tr><th>Part</th><th>Cloud</th><th>Self-hosted</th></tr></thead>
+      <tbody>
+        <tr><td>Object storage</td><td>S3, ADLS or GCS in an India region</td><td>MinIO</td></tr>
+        <tr><td>Table format</td><td>Apache Iceberg or Delta Lake</td><td>Apache Iceberg or Delta Lake</td></tr>
+        <tr><td>CDC</td><td>Debezium with Kafka, or a managed service (AWS DMS, Azure Data Factory)</td><td>Debezium with Redpanda or Kafka</td></tr>
+        <tr><td>Transform</td><td>dbt on Spark or the warehouse engine</td><td>dbt on Spark or DuckDB</td></tr>
+        <tr><td>Serving (Gold)</td><td>Redshift, Synapse, BigQuery or Trino</td><td>Trino, ClickHouse or PostgreSQL</td></tr>
+        <tr><td>Decide on</td><td colspan="2">Data residency in India (DPDP §16), the team's skills, cost at our volume, and who runs it at 2 a.m.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <span>Built on the design in the <code>new intranet db</code> repository: <code>docs/data-flow.md</code> (trust boundaries), <code>docs/dpdp-compliance.md</code>, <code>docs/user-access-design.md</code> and <code>docs/data-lake-onepager.mmd</code> (lake layers and the AI layer).</span>
+  <span>Change this page through a team review. Record what changed and why in the version line at the top.</span>
+</footer>
+
+</div>
+</body>
+</html>

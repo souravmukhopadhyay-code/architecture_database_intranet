@@ -1,0 +1,101 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_club_proposal["events.club_proposal"]:::hub {
+    uuid id PK
+    text proposal_code UK
+    uuid proposed_by_account_id FK "→ iam.user_account"
+    uuid parent_org_unit_id FK "→ org.org_unit"
+    text club_name
+    text objective
+    uuid advisor_employee_id FK "→ people.employee"
+    uuid co_advisor_employee_id FK "→ people.employee; optional"
+    int club_category_id FK "→ ref.club_category; optional"
+    uuid instance_id FK, UK "→ wf.approval_instance; optional"
+    uuid club_org_unit_id FK, UK "→ org.org_unit; optional"
+  }
+  t_club_proposal_officer["events.club_proposal_officer"] {
+    uuid club_proposal_id PK, FK
+    int club_office_id PK, FK "→ ref.club_office"
+    uuid student_id FK, UK "→ people.student"
+  }
+  t_club_proposal_member["events.club_proposal_member"] {
+    uuid club_proposal_id PK, FK
+    uuid student_id PK, FK "→ people.student"
+  }
+  t_club_proposal_attachment["events.club_proposal_attachment"] {
+    uuid club_proposal_id PK, FK
+    uuid file_object_id PK, FK "→ people.file_object"
+    text description "optional"
+  }
+  t_club["events.club"]:::hub {
+    uuid org_unit_id PK, FK "→ org.org_unit"
+    text club_code UK
+    text objective
+    int club_category_id FK "→ ref.club_category"
+    uuid club_proposal_id FK, UK "optional"
+    date founded_on
+  }
+  t_club_officer["events.club_officer"] {
+    uuid id PK
+    uuid club_org_unit_id FK
+    int club_office_id FK "→ ref.club_office"
+    uuid student_id FK "→ people.student"
+    daterange valid
+  }
+  t_club_member["events.club_member"] {
+    uuid id PK
+    uuid club_org_unit_id FK
+    uuid student_id FK "→ people.student"
+    int club_member_role_id FK "→ ref.club_member_role"
+    daterange valid
+    uuid added_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_club_application["events.club_application"] {
+    uuid id PK
+    uuid club_org_unit_id FK
+    uuid student_id FK "→ people.student"
+    text note "optional"
+    timestamp applied_at
+    timestamp decided_at "optional"
+    uuid decided_by_account_id FK "→ iam.user_account; optional"
+    bool is_approved "optional"
+    text decision_note "optional"
+  }
+  t_club_suspension["events.club_suspension"] {
+    uuid id PK
+    uuid club_org_unit_id FK
+    tsrange during
+    text reason
+    uuid imposed_by_account_id FK "→ iam.user_account"
+  }
+  t_club_calendar_item["events.club_calendar_item"] {
+    uuid id PK
+    uuid club_org_unit_id FK
+    uuid academic_year_id FK "→ academic.academic_year"
+    text activity
+    int event_type_id FK "→ ref.event_type; optional"
+    date tentative_on
+    text target_group "optional"
+    uuid coordinator_student_id FK "→ people.student; optional"
+  }
+  t_club_proposal |o--o| t_club : "club_proposal_id"
+  t_club ||--o{ t_club_application : "club_org_unit_id"
+  t_club ||--o{ t_club_calendar_item : "club_org_unit_id"
+  t_club ||--o{ t_club_member : "club_org_unit_id"
+  t_club ||--o{ t_club_officer : "club_org_unit_id"
+  t_club_proposal ||--o{ t_club_proposal_attachment : "club_proposal_id"
+  t_club_proposal ||--o{ t_club_proposal_member : "club_proposal_id"
+  t_club_proposal ||--o{ t_club_proposal_officer : "club_proposal_id"
+  t_club ||--o{ t_club_suspension : "club_org_unit_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

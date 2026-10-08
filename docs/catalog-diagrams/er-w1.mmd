@@ -1,0 +1,196 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_approval_document_type["wf.approval_document_type"]:::hub {
+    int id PK
+    text code UK
+    text label
+    int app_module_id FK "→ authz.app_module"
+    int author_permission_id FK "→ authz.permission"
+    int viewer_permission_id FK "→ authz.permission; optional"
+    bool allows_empty_chain
+    text link_table "optional"
+    text link_document_column "optional"
+    bool is_active
+  }
+  t_approval_chain["wf.approval_chain"]:::hub {
+    int id PK
+    int document_type_id FK, UK
+    uuid scope_org_unit_id FK "→ org.org_unit; optional"
+    daterange valid
+    text note "optional"
+    bool allows_level_override
+    int min_approved_levels
+  }
+  t_approval_chain_stage["wf.approval_chain_stage"] {
+    int chain_id PK, FK
+    int seq PK
+    text code UK
+    text label
+    int wf_approver_kind_id FK "→ ref.wf_approver_kind"
+    int permission_id FK "→ authz.permission; optional"
+    int anchor_org_unit_type_id FK "→ ref.org_unit_type; optional"
+    bool anchor_is_owner
+    int position_type_id FK "→ org.position_type; optional"
+    int reporting_line_type_id FK "→ ref.reporting_line_type; optional"
+    int manager_level "optional"
+    uuid academic_body_id FK "→ academic.academic_body; optional"
+    uuid named_account_id FK "→ iam.user_account; optional"
+    int required_approvals "optional"
+    numeric min_amount "optional"
+    numeric max_amount "optional"
+    int wf_flag_id FK "→ ref.wf_flag; optional"
+    bool flag_must_be_absent
+    int wf_self_action_id FK "→ ref.wf_self_action"
+    bool needs_file
+    bool allows_forward
+    bool allows_return_to
+    interval due_within "optional"
+    int wf_timeout_action_id FK "→ ref.wf_timeout_action"
+    bool is_signature
+    bool is_mandatory
+  }
+  t_approval_chain_stage_check["wf.approval_chain_stage_check"] {
+    int chain_id PK, FK
+    int seq PK, FK
+    int check_no PK
+    text label
+    bool is_mandatory
+  }
+  t_approval_instance["wf.approval_instance"]:::hub {
+    uuid id PK
+    int document_type_id FK
+    int chain_id FK
+    uuid owner_org_unit_id FK "→ org.org_unit"
+    uuid submitted_by_account_id FK "→ iam.user_account"
+    timestamp submitted_at
+    text note "optional"
+    numeric amount "optional"
+    uuid subject_person_id FK "→ people.person; optional"
+    uuid revises_instance_id FK "optional"
+    bool allows_level_override
+    int min_approved_levels
+  }
+  t_approval_instance_flag["wf.approval_instance_flag"] {
+    uuid instance_id PK, FK
+    int wf_flag_id PK, FK "→ ref.wf_flag"
+  }
+  t_approval_step["wf.approval_step"]:::hub {
+    uuid instance_id PK, FK
+    int seq PK
+    text code
+    int wf_approver_kind_id FK "→ ref.wf_approver_kind"
+    int permission_id FK "→ authz.permission; optional"
+    uuid anchor_org_unit_id FK "→ org.org_unit"
+    int position_type_id FK "→ org.position_type; optional"
+    int required_approvals "optional"
+    bool needs_file
+    bool allows_forward
+    bool allows_return_to
+    interval due_within "optional"
+    int wf_timeout_action_id FK "→ ref.wf_timeout_action"
+    bool is_signature
+    bool is_mandatory
+  }
+  t_approval_step_assignee["wf.approval_step_assignee"] {
+    uuid instance_id PK, FK
+    int seq PK, FK
+    uuid account_id PK, FK "→ iam.user_account"
+    bigint added_by_action_id FK "optional"
+    bigint released_by_action_id FK "optional"
+  }
+  t_approval_step_check["wf.approval_step_check"] {
+    uuid instance_id PK, FK
+    int seq PK, FK
+    int check_no PK
+    uuid checked_by_account_id PK, FK "→ iam.user_account"
+    timestamp checked_at
+  }
+  t_approval_action["wf.approval_action"] {
+    bigint id PK
+    uuid instance_id FK
+    int step_seq FK "optional"
+    int wf_action_type_id FK "→ ref.wf_action_type"
+    uuid actor_account_id FK "→ iam.user_account; optional"
+    timestamp acted_at
+    text note "optional"
+    uuid file_object_id FK "→ people.file_object; optional"
+    uuid target_account_id FK "→ iam.user_account; optional"
+    uuid target_org_unit_id FK "→ org.org_unit; optional"
+    int return_to_seq FK "optional"
+    uuid on_behalf_of_account_id FK "→ iam.user_account; optional"
+  }
+  t_approval_delegation["wf.approval_delegation"] {
+    uuid id PK
+    uuid delegator_account_id FK "→ iam.user_account"
+    uuid delegate_account_id FK "→ iam.user_account"
+    int document_type_id FK "optional"
+    tsrange valid
+    text reason "optional"
+  }
+  t_approval_consultation["wf.approval_consultation"] {
+    uuid id PK
+    uuid instance_id FK
+    uuid asked_by_account_id FK "→ iam.user_account"
+    uuid asked_account_id FK "→ iam.user_account"
+    text question
+    timestamp asked_at
+    text reply "optional"
+    timestamp replied_at "optional"
+    uuid reply_file_object_id FK "→ people.file_object; optional"
+  }
+  t_approval_comment["wf.approval_comment"] {
+    uuid id PK
+    uuid instance_id FK
+    int step_seq FK
+    uuid author_account_id FK "→ iam.user_account"
+    text target_table "optional"
+    uuid target_row_id "optional"
+    text target_column "optional"
+    text body
+    text suggested_value "optional"
+    int wf_comment_status_id FK "→ ref.wf_comment_status"
+    uuid resolved_by_account_id FK "→ iam.user_account; optional"
+    timestamp resolved_at "optional"
+  }
+  t_approval_notice["wf.approval_notice"] {
+    bigint id PK
+    uuid instance_id FK
+    int step_seq "optional"
+    int wf_notice_kind_id FK "→ ref.wf_notice_kind"
+    uuid account_id FK "→ iam.user_account; optional"
+    date notice_date
+    timestamp dispatched_at "optional"
+  }
+  t_approval_instance ||--o{ t_approval_action : "instance_id"
+  t_approval_step |o--o{ t_approval_action : "instance_id, return_to_seq"
+  t_approval_step |o--o{ t_approval_action : "instance_id, step_seq"
+  t_approval_document_type ||--o{ t_approval_chain : "document_type_id"
+  t_approval_chain ||--o{ t_approval_chain_stage : "chain_id"
+  t_approval_chain_stage ||--o{ t_approval_chain_stage_check : "chain_id, seq"
+  t_approval_instance ||--o{ t_approval_comment : "instance_id"
+  t_approval_step ||--o{ t_approval_comment : "instance_id, step_seq"
+  t_approval_instance ||--o{ t_approval_consultation : "instance_id"
+  t_approval_document_type |o--o{ t_approval_delegation : "document_type_id"
+  t_approval_chain ||--o{ t_approval_instance : "chain_id"
+  t_approval_document_type ||--o{ t_approval_instance : "document_type_id"
+  t_approval_chain ||--o{ t_approval_instance : "document_type_id, chain_id"
+  t_approval_instance |o--o{ t_approval_instance : "revises_instance_id"
+  t_approval_instance ||--o{ t_approval_instance_flag : "instance_id"
+  t_approval_instance ||--o{ t_approval_notice : "instance_id"
+  t_approval_instance ||--o{ t_approval_step : "instance_id"
+  t_approval_action |o--o{ t_approval_step_assignee : "added_by_action_id"
+  t_approval_step ||--o{ t_approval_step_assignee : "instance_id, seq"
+  t_approval_action |o--o{ t_approval_step_assignee : "released_by_action_id"
+  t_approval_step ||--o{ t_approval_step_check : "instance_id, seq"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

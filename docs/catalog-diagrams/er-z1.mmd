@@ -1,0 +1,113 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_app_module["authz.app_module"] {
+    int id PK
+    text code UK
+    text name
+    text description "optional"
+    bool is_active
+  }
+  t_resource["authz.resource"] {
+    int id PK
+    int app_module_id FK, UK
+    text code UK
+    text label
+  }
+  t_action["authz.action"] {
+    int id PK
+    text code UK
+    text label
+  }
+  t_permission["authz.permission"] {
+    int id PK
+    int resource_id FK, UK
+    int action_id FK, UK
+    text description "optional"
+    bool is_scopable
+  }
+  t_role["authz.role"]:::hub {
+    int id PK
+    text code UK
+    text name UK
+    text description "optional"
+    bool is_system
+    bool requires_mfa
+    bool is_active
+  }
+  t_role_permission["authz.role_permission"] {
+    int role_id PK, FK
+    int permission_id PK, FK
+  }
+  t_role_inheritance["authz.role_inheritance"] {
+    int senior_role_id PK, FK
+    int junior_role_id PK, FK
+  }
+  t_role_conflict["authz.role_conflict"] {
+    int role_a_id PK, FK
+    int role_b_id PK, FK
+    text reason "optional"
+  }
+  t_account_role["authz.account_role"] {
+    uuid id PK
+    uuid account_id FK "→ iam.user_account"
+    int role_id FK
+    uuid scope_org_unit_id FK "→ org.org_unit; optional"
+    bool include_descendants
+    tsrange valid
+    uuid granted_by_account_id FK "→ iam.user_account; optional"
+    text reason "optional"
+  }
+  t_account_permission["authz.account_permission"] {
+    uuid id PK
+    uuid account_id FK "→ iam.user_account"
+    int permission_id FK
+    uuid scope_org_unit_id FK "→ org.org_unit; optional"
+    bool include_descendants
+    tsrange valid
+    uuid granted_by_account_id FK "→ iam.user_account; optional"
+    text reason
+  }
+  t_designation_role["authz.designation_role"] {
+    int designation_id PK, FK "→ people.designation"
+    int role_id PK, FK
+    bool scope_to_assignment_unit
+    bool include_descendants
+  }
+  t_position_role["authz.position_role"] {
+    int position_type_id PK, FK "→ org.position_type"
+    int role_id PK, FK
+    bool include_descendants
+  }
+  t_principal_kind_role["authz.principal_kind_role"] {
+    int id PK
+    int principal_kind_id FK, UK "→ ref.principal_kind"
+    int employee_category_id FK, UK "→ ref.employee_category; optional"
+    int role_id FK, UK
+    bool scope_to_home_unit
+  }
+  t_permission ||--o{ t_account_permission : "permission_id"
+  t_role ||--o{ t_account_role : "role_id"
+  t_role ||--o{ t_designation_role : "role_id"
+  t_action ||--o{ t_permission : "action_id"
+  t_resource ||--o{ t_permission : "resource_id"
+  t_role ||--o{ t_position_role : "role_id"
+  t_role ||--o{ t_principal_kind_role : "role_id"
+  t_app_module ||--o{ t_resource : "app_module_id"
+  t_role ||--o{ t_role_conflict : "role_a_id"
+  t_role ||--o{ t_role_conflict : "role_b_id"
+  t_role ||--o{ t_role_inheritance : "junior_role_id"
+  t_role ||--o{ t_role_inheritance : "senior_role_id"
+  t_permission ||--o{ t_role_permission : "permission_id"
+  t_role ||--o{ t_role_permission : "role_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

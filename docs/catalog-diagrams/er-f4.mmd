@@ -1,0 +1,48 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_guest_stay["facility.guest_stay"] {
+    uuid id PK
+    uuid room_id FK "→ org.room"
+    uuid guest_person_id FK "→ people.person"
+    int guest_category_id FK "→ ref.guest_category"
+    uuid host_org_unit_id FK "→ org.org_unit"
+    uuid host_employee_id FK "→ people.employee; optional"
+    daterange nights
+    text purpose
+    int headcount
+    uuid instance_id FK, UK "→ wf.approval_instance"
+    timestamp checked_in_at "optional"
+    timestamp checked_out_at "optional"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+    int booking_cancel_reason_id FK "→ ref.booking_cancel_reason; optional"
+  }
+  t_guest_tariff["facility.guest_tariff"] {
+    uuid id PK
+    uuid room_id FK "→ org.room; optional"
+    int room_use_id FK "→ ref.room_use; optional"
+    int guest_category_id FK "→ ref.guest_category"
+    numeric rate_per_night
+    char currency
+    daterange valid
+  }
+  t_parking_permit["facility.parking_permit"] {
+    uuid id PK
+    uuid zone_room_id FK "→ org.room"
+    uuid person_id FK "→ people.person"
+    text vehicle_registration_no
+    int parking_permit_type_id FK "→ ref.parking_permit_type"
+    daterange valid
+  }
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,121 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_event_registration["events.event_registration"]:::hub {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    uuid person_id FK, UK "→ people.person"
+    text registration_code UK
+    bytes qr_token_hash UK
+    timestamp ticket_issued_at "optional"
+    timestamp registered_at
+    timestamp waitlisted_at "optional"
+    timestamp promoted_at "optional"
+    timestamp decided_at "optional"
+    uuid decided_by_account_id FK "→ iam.user_account; optional"
+    bool is_approved "optional"
+    timestamp cancelled_at "optional"
+    uuid cancelled_by_account_id FK "→ iam.user_account; optional"
+    int registration_cancel_reason_id FK "→ ref.registration_cancel_reason; optional"
+  }
+  t_field_response["events.field_response"] {
+    uuid registration_id PK, FK
+    uuid event_custom_field_id PK, FK "→ event_custom_field"
+    text value "optional"
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_extra_pass["events.extra_pass"] {
+    uuid id PK
+    uuid registration_id FK
+    text guest_name
+    text guest_phone "optional"
+    text relationship "optional"
+  }
+  t_event_team["events.event_team"]:::hub {
+    uuid id PK
+    uuid event_id FK "→ event"
+    text name
+    uuid leader_registration_id FK
+    bool looking_for_members
+    timestamp locked_at "optional"
+    timestamp withdrawn_at "optional"
+    timestamp disqualified_at "optional"
+    uuid disqualified_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_event_team_member["events.event_team_member"] {
+    uuid id PK
+    uuid event_team_id FK
+    uuid registration_id FK
+    timestamp joined_at
+    timestamp left_at "optional"
+  }
+  t_team_invitation["events.team_invitation"] {
+    uuid id PK
+    uuid event_team_id FK
+    uuid invitee_registration_id FK
+    text message "optional"
+    timestamp invited_at
+    timestamp expires_at "optional"
+    timestamp responded_at "optional"
+    bool is_accepted "optional"
+  }
+  t_team_join_request["events.team_join_request"] {
+    uuid id PK
+    uuid event_team_id FK
+    uuid registration_id FK
+    text message "optional"
+    timestamp requested_at
+    timestamp responded_at "optional"
+    bool is_accepted "optional"
+  }
+  t_entry_scan["events.entry_scan"] {
+    bigint id PK
+    uuid registration_id FK
+    int entry_direction_id FK "→ ref.entry_direction"
+    int people_count
+    timestamp scanned_at
+    uuid scanned_by_account_id FK "→ iam.user_account"
+    int scan_source_id FK "→ ref.scan_source"
+    text gate "optional"
+    text remarks "optional"
+  }
+  t_round_attendance["events.round_attendance"] {
+    bigint id PK
+    uuid event_round_id FK, UK "→ event_round"
+    uuid registration_id FK, UK
+    timestamp marked_at
+    uuid marked_by_account_id FK "→ iam.user_account"
+    int scan_source_id FK "→ ref.scan_source"
+  }
+  t_event_prize_award["events.event_prize_award"] {
+    uuid id PK
+    uuid proposal_prize_id FK, UK "→ proposal_prize"
+    uuid registration_id FK, UK "optional"
+    uuid event_team_id FK, UK "optional"
+    timestamp awarded_at
+    uuid awarded_by_account_id FK "→ iam.user_account"
+  }
+  t_event_registration ||--o{ t_entry_scan : "registration_id"
+  t_event_team |o--o{ t_event_prize_award : "event_team_id"
+  t_event_registration |o--o{ t_event_prize_award : "registration_id"
+  t_event_registration ||--o{ t_event_team : "leader_registration_id"
+  t_event_team ||--o{ t_event_team_member : "event_team_id"
+  t_event_registration ||--o{ t_event_team_member : "registration_id"
+  t_event_registration ||--o{ t_extra_pass : "registration_id"
+  t_event_registration ||--o{ t_field_response : "registration_id"
+  t_event_registration ||--o{ t_round_attendance : "registration_id"
+  t_event_team ||--o{ t_team_invitation : "event_team_id"
+  t_event_registration ||--o{ t_team_invitation : "invitee_registration_id"
+  t_event_team ||--o{ t_team_join_request : "event_team_id"
+  t_event_registration ||--o{ t_team_join_request : "registration_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

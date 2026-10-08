@@ -1,0 +1,84 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_study_break["academic.study_break"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ student_enrollment"
+    int study_break_type_id FK "→ ref.study_break_type"
+    daterange period
+    text reason "optional"
+    uuid approved_by_employee_id FK "→ people.employee"
+    date approved_on
+  }
+  t_program_transfer["academic.program_transfer"] {
+    uuid id PK
+    uuid from_enrollment_id FK, UK "→ student_enrollment"
+    uuid to_enrollment_id FK, UK "→ student_enrollment"
+    uuid approved_by_employee_id FK "→ people.employee"
+    date approved_on
+    text reason "optional"
+    uuid body_resolution_id FK "→ body_resolution; optional"
+  }
+  t_mentoring_meeting["academic.mentoring_meeting"] {
+    uuid id PK
+    uuid student_mentor_id FK "→ people.student_mentor"
+    date met_on
+    int meeting_mode_id FK "→ ref.meeting_mode"
+    text summary
+    text action_points "optional"
+    date follow_up_on "optional"
+    bool concern_flag
+  }
+  t_disciplinary_case["academic.disciplinary_case"] {
+    uuid id PK
+    uuid student_id FK "→ people.student"
+    int misconduct_type_id FK "→ ref.misconduct_type"
+    date occurred_on
+    date reported_on
+    uuid reported_by_employee_id FK "→ people.employee"
+    text description
+    uuid academic_body_id FK "→ academic_body; optional"
+    int disciplinary_status_id FK "→ ref.disciplinary_status"
+    date decided_on "optional"
+    text decision "optional"
+    int disciplinary_penalty_id FK "→ ref.disciplinary_penalty; optional"
+    uuid study_break_id FK, UK "optional"
+  }
+  t_supervised_work["academic.supervised_work"] {
+    uuid id PK
+    uuid course_registration_id FK, UK "→ course_registration"
+    text title
+    text synopsis "optional"
+    uuid report_file_id FK "→ people.file_object; optional"
+  }
+  t_supervised_work_guide["academic.supervised_work_guide"] {
+    uuid id PK
+    uuid supervised_work_id FK
+    int supervisor_role_id FK "→ ref.supervisor_role"
+    uuid employee_id FK "→ people.employee; optional"
+    uuid external_person_id FK "→ people.person; optional"
+    daterange valid
+  }
+  t_internship["academic.internship"] {
+    uuid supervised_work_id PK, FK
+    text organisation_name
+    int city_id FK "→ ref.city; optional"
+    daterange period
+    uuid industry_mentor_person_id FK "→ people.person; optional"
+    uuid offer_letter_file_id FK "→ people.file_object; optional"
+    uuid completion_certificate_file_id FK "→ people.file_object; optional"
+  }
+  t_study_break |o--o| t_disciplinary_case : "study_break_id"
+  t_supervised_work ||--o| t_internship : "supervised_work_id"
+  t_supervised_work ||--o{ t_supervised_work_guide : "supervised_work_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

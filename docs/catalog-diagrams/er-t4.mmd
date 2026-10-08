@@ -1,0 +1,31 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_kb_article["tms.kb_article"] {
+    uuid id PK
+    int ticket_domain_id FK "→ ref.tms_ticket_domain"
+    uuid category_id FK "→ ticket_category; optional"
+    text title
+    text body
+    daterange published "optional"
+    int sort_order
+    uuid written_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_kb_feedback["tms.kb_feedback"] {
+    bigint id PK
+    uuid kb_article_id FK
+    bool was_helpful
+    date given_on
+  }
+  t_kb_article ||--o{ t_kb_feedback : "kb_article_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

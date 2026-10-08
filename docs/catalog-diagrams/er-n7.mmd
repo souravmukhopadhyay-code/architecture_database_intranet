@@ -1,0 +1,84 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_event_coupon["events.event_coupon"] {
+    uuid id PK
+    uuid event_id FK, UK "→ event"
+    text code UK
+    int coupon_discount_type_id FK "→ ref.coupon_discount_type"
+    numeric discount_value
+    numeric max_discount "optional"
+    numeric min_amount "optional"
+    int max_uses "optional"
+    int max_uses_per_person "optional"
+    timestamp expires_at "optional"
+    bool is_active
+    text description "optional"
+    uuid created_by_account_id FK "→ iam.user_account"
+  }
+  t_coupon_redemption["events.coupon_redemption"] {
+    uuid id PK
+    uuid event_coupon_id FK
+    uuid registration_id FK, UK "→ event_registration"
+    numeric discount_amount
+    timestamp redeemed_at
+  }
+  t_event_payment["events.event_payment"] {
+    uuid id PK
+    text receipt_no UK
+    uuid registration_id FK "→ event_registration; optional"
+    uuid stall_application_id FK "→ stall_application; optional"
+    uuid event_team_id FK "→ event_team; optional"
+    numeric amount
+    char currency_code
+    int payment_channel_id FK "→ ref.payment_channel"
+    int payment_status_id FK "→ ref.payment_status"
+    text gateway_order_id UK "optional"
+    text gateway_payment_id UK "optional"
+    text payment_reference "optional"
+    uuid proof_file_id FK "→ people.file_object; optional"
+    int attempts
+    bool webhook_verified
+    uuid recorded_by_account_id FK "→ iam.user_account; optional"
+    uuid verified_by_account_id FK "→ iam.user_account; optional"
+    timestamp superseded_at "optional"
+    timestamp captured_at "optional"
+    timestamp failed_at "optional"
+    timestamp refunded_at "optional"
+    text refund_reference "optional"
+    text refund_note "optional"
+    uuid refund_recorded_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_event_expense["events.event_expense"] {
+    uuid id PK
+    uuid event_id FK "→ event"
+    int budget_item_type_id FK "→ ref.budget_item_type"
+    uuid proposal_budget_item_id FK "→ proposal_budget_item; optional"
+    text description
+    numeric amount
+    date incurred_on
+    text payee "optional"
+    text bill_no "optional"
+    uuid bill_file_id FK "→ people.file_object; optional"
+    uuid recorded_by_account_id FK "→ iam.user_account"
+  }
+  t_event_settlement["events.event_settlement"] {
+    uuid id PK
+    text settlement_code UK
+    uuid event_id FK "→ event"
+    text remarks "optional"
+    uuid submitted_by_account_id FK "→ iam.user_account"
+    uuid instance_id FK, UK "→ wf.approval_instance"
+  }
+  t_event_coupon ||--o{ t_coupon_redemption : "event_coupon_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,111 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_exam_session["exam.exam_session"] {
+    uuid id PK
+    uuid academic_term_id FK, UK "→ academic.academic_term"
+    int exam_session_type_id FK "→ ref.exam_session_type"
+    text name UK
+    daterange period
+    daterange registration_window "optional"
+  }
+  t_eligibility_hold["exam.eligibility_hold"] {
+    uuid id PK
+    uuid student_id FK "→ people.student"
+    uuid academic_term_id FK "→ academic.academic_term"
+    uuid course_offering_id FK "→ academic.course_offering; optional"
+    int exam_hold_type_id FK "→ ref.exam_hold_type"
+    text reason
+    uuid placed_by_employee_id FK "→ people.employee; optional"
+    timestamp placed_at
+    timestamp released_at "optional"
+    uuid released_by_employee_id FK "→ people.employee; optional"
+  }
+  t_attendance_condonation["exam.attendance_condonation"] {
+    uuid course_registration_id PK, FK "→ academic.course_registration"
+    uuid approved_by_employee_id FK "→ people.employee"
+    text reason
+    timestamp approved_at
+  }
+  t_exam_registration["exam.exam_registration"]:::hub {
+    uuid id PK
+    uuid exam_session_id FK, UK
+    uuid course_registration_id FK, UK "→ academic.course_registration"
+    int exam_attempt_type_id FK "→ ref.exam_attempt_type"
+    timestamp registered_at
+  }
+  t_exam_schedule["exam.exam_schedule"]:::hub {
+    uuid id PK
+    uuid exam_session_id FK, UK
+    uuid course_offering_id FK, UK "→ academic.course_offering"
+    int assessment_type_id FK, UK "→ ref.assessment_type"
+    date exam_date
+    time start_time
+    time end_time
+    uuid question_paper_id FK "→ question_paper; optional"
+  }
+  t_exam_room["exam.exam_room"] {
+    uuid exam_schedule_id PK, FK
+    uuid room_id PK, FK "→ org.room"
+  }
+  t_seat_allocation["exam.seat_allocation"] {
+    uuid exam_schedule_id PK, FK
+    uuid exam_registration_id PK, FK
+    uuid room_id FK
+    text seat_no
+  }
+  t_invigilation_duty["exam.invigilation_duty"] {
+    uuid exam_schedule_id PK, FK
+    uuid room_id PK, FK
+    uuid employee_id PK, FK "→ people.employee"
+    bool is_chief
+  }
+  t_exam_attendance["exam.exam_attendance"] {
+    uuid exam_schedule_id PK, FK
+    uuid exam_registration_id PK, FK
+    int exam_attendance_status_id FK "→ ref.exam_attendance_status"
+    uuid marked_by_employee_id FK "→ people.employee; optional"
+    timestamp marked_at
+  }
+  t_ufm_case["exam.ufm_case"] {
+    uuid id PK
+    uuid exam_schedule_id FK
+    uuid exam_registration_id FK
+    uuid reported_by_employee_id FK "→ people.employee"
+    timestamp reported_at
+    text description
+    int ufm_case_status_id FK "→ ref.ufm_case_status"
+    int ufm_penalty_id FK "→ ref.ufm_penalty; optional"
+    uuid decided_by_employee_id FK "→ people.employee; optional"
+    timestamp decided_at "optional"
+  }
+  t_examiner_panel["exam.examiner_panel"] {
+    uuid id PK
+    uuid exam_schedule_id FK, UK
+    int examiner_role_id FK "→ ref.examiner_role"
+    uuid employee_id FK, UK "→ people.employee; optional"
+    uuid external_person_id FK, UK "→ people.person; optional"
+    uuid appointed_by_employee_id FK "→ people.employee"
+  }
+  t_exam_registration ||--o{ t_exam_attendance : "exam_registration_id"
+  t_exam_schedule ||--o{ t_exam_attendance : "exam_schedule_id"
+  t_exam_session ||--o{ t_exam_registration : "exam_session_id"
+  t_exam_schedule ||--o{ t_exam_room : "exam_schedule_id"
+  t_exam_session ||--o{ t_exam_schedule : "exam_session_id"
+  t_exam_schedule ||--o{ t_examiner_panel : "exam_schedule_id"
+  t_exam_room ||--o{ t_invigilation_duty : "exam_schedule_id, room_id"
+  t_exam_registration ||--o{ t_seat_allocation : "exam_registration_id"
+  t_exam_room ||--o{ t_seat_allocation : "exam_schedule_id, room_id"
+  t_exam_registration ||--o{ t_ufm_case : "exam_registration_id"
+  t_exam_schedule ||--o{ t_ufm_case : "exam_schedule_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

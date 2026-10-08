@@ -1,0 +1,39 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_key_item["facility.key_item"] {
+    uuid id PK
+    text key_code UK
+    int key_kind_id FK "→ ref.key_kind"
+    uuid room_id FK "→ org.room; optional"
+    uuid floor_id FK "→ org.floor; optional"
+    uuid building_id FK "→ org.building; optional"
+    uuid custodian_org_unit_id FK "→ org.org_unit"
+    bool is_active
+    timestamp lost_reported_at "optional"
+    uuid replaced_by_key_item_id FK "optional"
+  }
+  t_key_issue["facility.key_issue"] {
+    uuid id PK
+    uuid key_item_id FK
+    uuid holder_person_id FK "→ people.person"
+    uuid issued_by_account_id FK "→ iam.user_account"
+    timestamp issued_at
+    timestamp due_back_at "optional"
+    timestamp returned_at "optional"
+    uuid returned_to_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+  }
+  t_key_item ||--o{ t_key_issue : "key_item_id"
+  t_key_item |o--o{ t_key_item : "replaced_by_key_item_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,98 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_person["people.person"]:::hub {
+    uuid id PK
+    text first_name
+    text middle_name "optional"
+    text last_name "optional"
+    text preferred_name "optional"
+    int gender_id FK "→ ref.gender; optional"
+  }
+  t_person_relationship["people.person_relationship"] {
+    uuid person_id PK, FK
+    uuid related_person_id PK, FK
+    int relationship_type_id PK, FK "→ ref.relationship_type"
+    bool is_guardian
+    bool is_emergency_contact
+    bool is_primary_contact
+  }
+  t_employee["people.employee"]:::hub {
+    uuid id PK
+    uuid person_id FK, UK
+    text employee_code UK
+    int employee_category_id FK "→ ref.employee_category"
+    int employment_type_id FK "→ ref.employment_type"
+    int employment_status_id FK "→ ref.employment_status"
+    int grade_id FK "→ ref.grade; optional"
+    date joined_on
+    date separated_on "optional"
+  }
+  t_designation["people.designation"] {
+    int id PK
+    text code UK
+    text title UK
+    int employee_category_id FK "→ ref.employee_category; optional"
+    bool is_active
+  }
+  t_employee_assignment["people.employee_assignment"] {
+    uuid id PK
+    uuid employee_id FK
+    uuid org_unit_id FK "→ org.org_unit"
+    int designation_id FK
+    int job_function_id FK "→ ref.job_function; optional"
+    int job_role_id FK "→ ref.job_role; optional"
+    bool is_primary
+    daterange valid
+  }
+  t_employee_reporting_line["people.employee_reporting_line"] {
+    uuid id PK
+    uuid employee_id FK
+    uuid manager_employee_id FK
+    int reporting_line_type_id FK "→ ref.reporting_line_type"
+    daterange valid
+  }
+  t_student["people.student"] {
+    uuid id PK
+    uuid person_id FK, UK
+    text enrollment_no UK
+    text registration_no UK "optional"
+    int student_status_id FK "→ ref.student_status"
+    date admitted_on
+  }
+  t_student_mentor["people.student_mentor"] {
+    uuid id PK
+    uuid student_id FK
+    uuid employee_id FK
+    daterange valid
+  }
+  t_file_object["people.file_object"] {
+    uuid id PK
+    int storage_backend_id FK, UK "→ ref.storage_backend"
+    text object_key UK
+    text mime_type
+    bigint byte_size
+    bytes sha256
+    timestamp uploaded_at
+  }
+  t_person ||--o| t_employee : "person_id"
+  t_designation ||--o{ t_employee_assignment : "designation_id"
+  t_employee ||--o{ t_employee_assignment : "employee_id"
+  t_employee ||--o{ t_employee_reporting_line : "employee_id"
+  t_employee ||--o{ t_employee_reporting_line : "manager_employee_id"
+  t_person ||--o{ t_person_relationship : "person_id"
+  t_person ||--o{ t_person_relationship : "related_person_id"
+  t_person ||--o| t_student : "person_id"
+  t_employee ||--o{ t_student_mentor : "employee_id"
+  t_student ||--o{ t_student_mentor : "student_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

@@ -1,0 +1,142 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_course["academic.course"]:::hub {
+    uuid id PK
+    text code UK
+    text title
+    uuid owner_org_unit_id FK "→ org.org_unit"
+    numeric credits
+    bool is_active
+  }
+  t_course_component_hours["academic.course_component_hours"] {
+    uuid course_id PK, FK
+    int delivery_component_id PK, FK "→ ref.delivery_component"
+    numeric hours_per_week
+  }
+  t_course_prerequisite["academic.course_prerequisite"] {
+    uuid course_id PK, FK
+    uuid prerequisite_course_id PK, FK
+  }
+  t_course_continuation["academic.course_continuation"] {
+    uuid course_id PK, FK
+    uuid continues_course_id FK
+  }
+  t_course_regulator_code["academic.course_regulator_code"] {
+    uuid course_id PK, FK
+    int regulatory_body_id PK, FK "→ ref.regulatory_body"
+    text code UK
+  }
+  t_curriculum["academic.curriculum"]:::hub {
+    uuid id PK
+    uuid program_id FK, UK "→ program"
+    text code UK
+    text name
+    int grade_scale_id FK "→ grade_scale"
+    numeric attendance_threshold_pct
+    numeric max_transfer_credit_pct "optional"
+    numeric max_duration_years "optional"
+    int max_attempts_per_course "optional"
+    bool allows_internal_marks_revision
+    bool is_active
+  }
+  t_curriculum_course["academic.curriculum_course"] {
+    uuid id PK
+    uuid curriculum_id FK
+    int term_no
+    uuid course_id FK
+    int course_category_id FK "→ ref.course_category"
+    int evaluation_scheme_id FK "→ evaluation_scheme"
+    uuid specialization_id FK "→ specialization; optional"
+    uuid pathway_id FK "optional"
+    uuid result_group_id FK "optional"
+  }
+  t_curriculum_pathway["academic.curriculum_pathway"] {
+    uuid id PK
+    uuid curriculum_id FK, UK
+    text code UK
+    text name
+    int from_term_no
+  }
+  t_result_group["academic.result_group"] {
+    uuid id PK
+    uuid curriculum_id FK, UK
+    text code UK
+    text name
+    numeric min_pass_pct
+  }
+  t_elective_basket["academic.elective_basket"] {
+    uuid id PK
+    uuid curriculum_id FK, UK
+    text code UK
+    text name
+    int term_no
+    int course_category_id FK "→ ref.course_category"
+    int courses_to_choose
+    uuid specialization_id FK "→ specialization; optional"
+    uuid pathway_id FK "optional"
+  }
+  t_elective_basket_course["academic.elective_basket_course"] {
+    uuid elective_basket_id PK, FK
+    uuid course_id PK, FK
+    int evaluation_scheme_id FK "→ evaluation_scheme"
+  }
+  t_batch_curriculum["academic.batch_curriculum"] {
+    uuid batch_id PK, FK "→ batch"
+    uuid curriculum_id FK
+  }
+  t_promotion_rule["academic.promotion_rule"] {
+    uuid id PK
+    uuid curriculum_id FK, UK
+    int after_term_no UK
+    numeric max_backlog_credits
+    int max_backlog_courses "optional"
+  }
+  t_attempt_allowance["academic.attempt_allowance"] {
+    uuid curriculum_id PK, FK
+    int exam_attempt_type_id PK, FK "→ ref.exam_attempt_type"
+    int max_attempts
+  }
+  t_credit_load_rule["academic.credit_load_rule"] {
+    uuid id PK
+    uuid curriculum_id FK, UK
+    int term_no UK "optional"
+    numeric min_credits "optional"
+    numeric max_credits "optional"
+  }
+  t_curriculum_approval["academic.curriculum_approval"] {
+    uuid instance_id PK, FK "→ wf.approval_instance"
+    uuid curriculum_id FK
+  }
+  t_curriculum ||--o{ t_attempt_allowance : "curriculum_id"
+  t_curriculum ||--o{ t_batch_curriculum : "curriculum_id"
+  t_course ||--o{ t_course_component_hours : "course_id"
+  t_course ||--o{ t_course_continuation : "continues_course_id"
+  t_course ||--o| t_course_continuation : "course_id"
+  t_course ||--o{ t_course_prerequisite : "course_id"
+  t_course ||--o{ t_course_prerequisite : "prerequisite_course_id"
+  t_course ||--o{ t_course_regulator_code : "course_id"
+  t_curriculum ||--o{ t_credit_load_rule : "curriculum_id"
+  t_curriculum ||--o{ t_curriculum_approval : "curriculum_id"
+  t_course ||--o{ t_curriculum_course : "course_id"
+  t_curriculum ||--o{ t_curriculum_course : "curriculum_id"
+  t_curriculum_pathway |o--o{ t_curriculum_course : "curriculum_id, pathway_id"
+  t_result_group |o--o{ t_curriculum_course : "curriculum_id, result_group_id"
+  t_curriculum ||--o{ t_curriculum_pathway : "curriculum_id"
+  t_curriculum ||--o{ t_elective_basket : "curriculum_id"
+  t_curriculum_pathway |o--o{ t_elective_basket : "curriculum_id, pathway_id"
+  t_course ||--o{ t_elective_basket_course : "course_id"
+  t_elective_basket ||--o{ t_elective_basket_course : "elective_basket_id"
+  t_curriculum ||--o{ t_promotion_rule : "curriculum_id"
+  t_curriculum ||--o{ t_result_group : "curriculum_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

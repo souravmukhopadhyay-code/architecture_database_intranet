@@ -1,0 +1,78 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_course_syllabus["academic.course_syllabus"] {
+    uuid id PK
+    uuid course_id FK, UK "→ course"
+    text version UK
+    uuid approved_by_employee_id FK "→ people.employee; optional"
+    date approved_on "optional"
+    uuid body_resolution_id FK "→ body_resolution; optional"
+    daterange valid
+  }
+  t_syllabus_unit["academic.syllabus_unit"] {
+    uuid id PK
+    uuid course_syllabus_id FK, UK
+    int unit_no UK
+    text title
+    text content "optional"
+    numeric contact_hours "optional"
+  }
+  t_course_outcome["academic.course_outcome"] {
+    uuid id PK
+    uuid course_syllabus_id FK, UK
+    text code UK
+    text statement
+    int bloom_level_id FK "→ ref.bloom_level; optional"
+  }
+  t_program_outcome["academic.program_outcome"] {
+    uuid id PK
+    uuid program_id FK, UK "→ program"
+    int program_outcome_type_id FK "→ ref.program_outcome_type"
+    text code UK
+    text statement
+    bool is_active
+  }
+  t_co_po_mapping["academic.co_po_mapping"] {
+    uuid course_outcome_id PK, FK
+    uuid program_outcome_id PK, FK
+    int strength
+  }
+  t_lesson_plan_item["academic.lesson_plan_item"] {
+    uuid id PK
+    uuid teaching_assignment_id FK, UK "→ teaching_assignment"
+    int seq UK
+    uuid syllabus_unit_id FK "optional"
+    text topic
+    numeric planned_hours
+    int planned_week "optional"
+  }
+  t_attainment_policy["academic.attainment_policy"] {
+    uuid id PK
+    uuid program_id FK, UK "→ program; optional"
+    numeric student_target_pct
+    numeric level1_pct
+    numeric level2_pct
+    numeric level3_pct
+  }
+  t_evaluation_component_outcome["academic.evaluation_component_outcome"] {
+    int evaluation_component_id PK, FK "→ evaluation_component"
+    uuid course_outcome_id PK, FK
+  }
+  t_course_outcome ||--o{ t_co_po_mapping : "course_outcome_id"
+  t_program_outcome ||--o{ t_co_po_mapping : "program_outcome_id"
+  t_course_syllabus ||--o{ t_course_outcome : "course_syllabus_id"
+  t_course_outcome ||--o{ t_evaluation_component_outcome : "course_outcome_id"
+  t_syllabus_unit |o--o{ t_lesson_plan_item : "syllabus_unit_id"
+  t_course_syllabus ||--o{ t_syllabus_unit : "course_syllabus_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

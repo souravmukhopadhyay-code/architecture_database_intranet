@@ -1,0 +1,69 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_person_profile["pii.person_profile"] {
+    uuid person_id PK, FK "→ people.person"
+    date date_of_birth "optional"
+    int blood_group_id FK "→ ref.blood_group; optional"
+    int nationality_country_id FK "→ ref.country; optional"
+  }
+  t_person_email["pii.person_email"] {
+    uuid id PK
+    uuid person_id FK, UK "→ people.person"
+    text email UK
+    int contact_purpose_id FK "→ ref.contact_purpose"
+    bool is_primary
+    bool is_login_enabled
+    timestamp verified_at "optional"
+  }
+  t_person_phone["pii.person_phone"] {
+    uuid id PK
+    uuid person_id FK, UK "→ people.person"
+    text e164 UK
+    int contact_purpose_id FK "→ ref.contact_purpose"
+    bool is_primary
+    timestamp verified_at "optional"
+  }
+  t_address["pii.address"] {
+    uuid id PK
+    text line1
+    text line2 "optional"
+    text locality "optional"
+    int city_id FK "→ ref.city"
+    text postal_code
+  }
+  t_person_address["pii.person_address"] {
+    uuid id PK
+    uuid person_id FK "→ people.person"
+    uuid address_id FK
+    int address_type_id FK "→ ref.address_type"
+    daterange valid
+  }
+  t_person_identity_document["pii.person_identity_document"] {
+    uuid id PK
+    uuid person_id FK, UK "→ people.person"
+    int id_document_type_id FK, UK "→ ref.id_document_type"
+    bytes number_ciphertext
+    bytes number_hmac UK
+    text number_last4
+    date expires_on "optional"
+    timestamp verified_at "optional"
+  }
+  t_person_photo["pii.person_photo"] {
+    uuid id PK
+    uuid person_id FK "→ people.person"
+    uuid file_object_id FK, UK "→ people.file_object"
+    tsrange valid
+  }
+  t_address ||--o{ t_person_address : "address_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

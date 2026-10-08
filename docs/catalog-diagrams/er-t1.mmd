@@ -1,0 +1,129 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_helpdesk_setting["tms.helpdesk_setting"] {
+    bool id PK
+    bool auto_escalation_enabled
+    int reopen_window_days
+    int max_reopens
+    int confirmation_window_days
+    int rating_window_days
+    int clarification_reminder_days "optional"
+    int clarification_expiry_days "optional"
+    bool requester_may_escalate_overdue
+    int requester_refer_after_days "optional"
+    int auto_refer_after_days "optional"
+    int max_files_per_event
+    int max_file_bytes
+    int duplicate_window_seconds
+    int sla_warning_percent
+    bool on_hold_enabled
+    int max_hold_days "optional"
+    int notice_max_attempts
+    bool scheduler_office_hours_only
+    bool office_hours_only
+    bool count_holidays
+    bool student_tms_enabled
+    bool student_tms_locked
+    bool employee_tms_enabled
+    time business_day_start
+    time business_day_end
+    text time_zone
+    uuid updated_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_helpdesk_weekday["tms.helpdesk_weekday"] {
+    int iso_dow PK
+    time day_start "optional"
+    time day_end "optional"
+  }
+  t_helpdesk_day_override["tms.helpdesk_day_override"] {
+    date on_date PK
+    bool is_working
+    time day_start "optional"
+    time day_end "optional"
+    text note
+    uuid created_by_account_id FK "→ iam.user_account; optional"
+  }
+  t_helpdesk_closure_type["tms.helpdesk_closure_type"] {
+    int calendar_event_type_id PK, FK "→ ref.calendar_event_type"
+  }
+  t_helpdesk_declaration["tms.helpdesk_declaration"] {
+    uuid id PK
+    int ticket_domain_id FK "→ ref.tms_ticket_domain"
+    text body
+    daterange valid
+  }
+  t_helpdesk_file_type["tms.helpdesk_file_type"] {
+    text mime_type PK
+  }
+  t_helpdesk_channel["tms.helpdesk_channel"] {
+    int contact_channel_id PK, FK "→ ref.contact_channel"
+    bool is_enabled
+  }
+  t_ticket_category["tms.ticket_category"] {
+    uuid id PK
+    uuid parent_id FK "optional"
+    int category_level_id FK "→ ref.tms_category_level"
+    int ticket_domain_id FK "→ ref.tms_ticket_domain; optional"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    int category_type_id FK "→ ref.tms_category_type; optional"
+    int priority_id FK "→ ref.tms_priority; optional"
+    int academic_context_rule_id FK "→ ref.tms_academic_context_rule; optional"
+    int route_id FK "→ ticket_route; optional"
+    int redressal_forum_id FK "→ redressal_forum; optional"
+    bool direct_to_forum "optional"
+    bool is_confidential "optional"
+    bool allows_anonymous "optional"
+    bool allows_respondent "optional"
+    bool requires_incident_date "optional"
+    bool allows_raising "optional"
+    int sla_hours "optional"
+    int first_response_hours "optional"
+    bool sla_office_hours_only "optional"
+    int grievance_head_id FK "→ ref.tms_grievance_head; optional"
+    text name
+    text description "optional"
+    int sort_order
+    bool is_active
+  }
+  t_ticket_category_owner["tms.ticket_category_owner"] {
+    uuid id PK
+    uuid category_id FK
+    uuid employee_id FK "→ people.employee"
+    daterange valid
+  }
+  t_ticket_category_handler["tms.ticket_category_handler"] {
+    uuid id PK
+    uuid category_id FK, UK
+    uuid employee_id FK, UK "→ people.employee"
+    uuid org_unit_id FK, UK "→ org.org_unit; optional"
+    int sort_order
+    bool is_active
+  }
+  t_ticket_notice_rule["tms.ticket_notice_rule"] {
+    int id PK
+    int event_type_id FK, UK "→ ref.tms_event_type"
+    int notice_recipient_id FK, UK "→ ref.tms_notice_recipient"
+    int contact_channel_id FK, UK "→ ref.contact_channel"
+    int ticket_domain_id FK, UK "→ ref.tms_ticket_domain; optional"
+    bool notify_actor
+    bool is_mandatory
+  }
+  t_notice_opt_out["tms.notice_opt_out"] {
+    uuid account_id PK, FK "→ iam.user_account"
+    int contact_channel_id PK, FK "→ ref.contact_channel"
+  }
+  t_ticket_category |o--o{ t_ticket_category : "parent_id"
+  t_ticket_category ||--o{ t_ticket_category_handler : "category_id"
+  t_ticket_category ||--o{ t_ticket_category_owner : "category_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

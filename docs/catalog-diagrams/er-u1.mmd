@@ -1,0 +1,35 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction LR
+  t_audit_event["audit.audit_event"] {
+    bigint id PK
+    timestamp occurred_at PK
+    uuid actor_account_id "optional"
+    int audit_action_id FK "→ ref.audit_action"
+    name entity_schema
+    name entity_table
+    text entity_id
+    uuid request_id "optional"
+    uuid session_id "optional"
+    inet client_ip "optional"
+    bigint txid
+  }
+  t_audit_change["audit.audit_change"] {
+    bigint audit_event_id PK, FK "→ audit_event_202612; → audit_event_202701; → audit_event_202710; → audit_event_202709; → audit_event_202708; → audit_event_202707; → audit_event_202610; → audit_event_default; → audit_event_202611; → audit_event_202703; → audit_event_202702; → audit_event_202706; → audit_event_202705; → audit_event_202704"
+    timestamp occurred_at PK, FK "→ audit_event_202612; → audit_event_202701; → audit_event_202710; → audit_event_202709; → audit_event_202708; → audit_event_202707; → audit_event_202610; → audit_event_default; → audit_event_202611; → audit_event_202703; → audit_event_202702; → audit_event_202706; → audit_event_202705; → audit_event_202704"
+    name column_name PK
+    text old_value "optional"
+    text new_value "optional"
+  }
+  t_audit_event ||--o{ t_audit_change : "audit_event_id, occurred_at"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

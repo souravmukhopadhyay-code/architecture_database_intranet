@@ -1,0 +1,100 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_ticket["tms.ticket"]:::hub {
+    uuid id PK
+    text request_no UK
+    uuid requester_account_id FK, UK "→ iam.user_account"
+    uuid requester_org_unit_id FK "→ org.org_unit; optional"
+    uuid raised_by_account_id FK "→ iam.user_account; optional"
+    int intake_channel_id FK "→ ref.tms_intake_channel"
+    uuid raised_category_id FK "→ ticket_category"
+    int route_id FK "→ ticket_route; optional"
+    int priority_id FK "→ ref.tms_priority"
+    int message_type_id FK "→ ref.tms_message_type"
+    text subject
+    text description
+    text relief_sought "optional"
+    date incident_on "optional"
+    bool is_anonymous
+    uuid contact_phone_id FK "→ pii.person_phone; optional"
+    uuid declaration_id FK "→ helpdesk_declaration; optional"
+    uuid requested_assignee_employee_id FK "→ people.employee; optional"
+    text idempotency_key UK "optional"
+  }
+  t_ticket_number_counter["tms.ticket_number_counter"] {
+    int year PK
+    int last_no
+  }
+  t_ticket_academic_context["tms.ticket_academic_context"] {
+    uuid ticket_id PK, FK
+    uuid batch_id FK "→ academic.batch"
+    uuid academic_term_id FK "→ academic.academic_term"
+    uuid course_id FK "→ academic.course; optional"
+    int term_no
+  }
+  t_ticket_respondent["tms.ticket_respondent"] {
+    uuid ticket_id PK, FK
+    uuid person_id PK, FK "→ people.person"
+    uuid added_by_account_id FK "→ iam.user_account"
+    timestamp added_at
+  }
+  t_ticket_event["tms.ticket_event"] {
+    bigint id PK
+    uuid ticket_id FK
+    int event_type_id FK "→ ref.tms_event_type"
+    uuid actor_account_id FK "→ iam.user_account; optional"
+    timestamp occurred_at
+    text remarks "optional"
+    uuid assignee_employee_id FK "→ people.employee; optional"
+    int assignment_basis_id FK "→ ref.tms_assignment_basis; optional"
+    int level_id FK "→ ticket_route_level; optional"
+    uuid level_category_id FK "→ ticket_category; optional"
+    int forum_id FK "→ redressal_forum; optional"
+    uuid academic_body_id FK "→ academic.academic_body; optional"
+    uuid category_id FK "→ ticket_category; optional"
+    int route_id FK "→ ticket_route; optional"
+    int priority_id FK "→ ref.tms_priority; optional"
+    uuid related_ticket_id FK "optional"
+    uuid consulted_employee_id FK "→ people.employee; optional"
+    bigint reply_to_event_id FK "optional"
+    int hold_reason_id FK "→ ref.tms_hold_reason; optional"
+    int redressal_outcome_id FK "→ ref.tms_redressal_outcome; optional"
+    uuid body_resolution_id FK "→ academic.body_resolution; optional"
+    timestamp due_at "optional"
+    int sla_remaining_minutes "optional"
+    int rating "optional"
+  }
+  t_ticket_event_file["tms.ticket_event_file"] {
+    bigint ticket_event_id PK, FK
+    uuid file_object_id PK, FK "→ people.file_object"
+  }
+  t_ticket_notification["tms.ticket_notification"] {
+    bigint id PK
+    bigint ticket_event_id FK, UK
+    uuid recipient_account_id FK, UK "→ iam.user_account"
+    int contact_channel_id FK, UK "→ ref.contact_channel"
+    int notification_status_id FK "→ ref.tms_notification_status"
+    int attempt_count
+    timestamp last_attempt_at "optional"
+    timestamp sent_at "optional"
+    text error "optional"
+  }
+  t_ticket ||--o| t_ticket_academic_context : "ticket_id"
+  t_ticket |o--o{ t_ticket_event : "related_ticket_id"
+  t_ticket_event |o--o{ t_ticket_event : "reply_to_event_id"
+  t_ticket ||--o{ t_ticket_event : "ticket_id"
+  t_ticket_event ||--o{ t_ticket_event_file : "ticket_event_id"
+  t_ticket_event ||--o{ t_ticket_notification : "ticket_event_id"
+  t_ticket ||--o{ t_ticket_respondent : "ticket_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

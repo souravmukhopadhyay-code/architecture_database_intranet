@@ -1,0 +1,96 @@
+# .gitignore — New Intranet Foundation Database
+#
+# This repo is SQL + docs + generator scripts. Everything that the generator
+# scripts PRODUCE AND THE DOCS REFERENCE is committed on purpose and must NOT
+# be listed here:
+#   docs/data-dictionary.md, docs/table-catalog.md, docs/data-flow*.md,
+#   docs/catalog-diagrams/, docs/dfd/**/*.mmd|*.png|*.svg, docs/*.png|*.svg
+# What is ignored is only throw-away: local database dumps, intermediate
+# generator input, tool caches, editor/OS noise.
+
+# ---------------------------------------------------------------- Python
+# scripts/*.py and docs/dfd/build_dfd.py are run directly from the checkout.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# ---------------------------------------------------------------- Node
+# Only ever installed in a scratch folder for @mermaid-js/mermaid-cli (render.sh).
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# ------------------------------------------------- psql / generator scratch
+# Intermediate TSV between gen_data_dictionary.sql and gen_data_dictionary.py
+# (README pipes it to /tmp; catch it here if written in-tree).
+dict.tsv
+*.tsv
+.psql_history
+psql.log
+psqlrc.local
+
+# ------------------------------------------------- local databases & dumps
+# intranet_check is a throw-away local DB (CLAUDE.md §6); nothing in this repo
+# depends on a long-lived one, so no dump belongs in version control.
+*.dump
+*.sql.gz
+*.sql.bz2
+*.sql.xz
+*.backup
+*.pgdump
+*.tar.gz
+dumps/
+backups/
+
+# ------------------------------------------------- credentials & local config
+# Never commit DB credentials, service passwords, or encryption keys — the
+# PII/pii-encryption and MFA material in this design lives outside the repo.
+.env
+.env.*
+!.env.example
+.pgpass
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+local.conf
+*.local.conf
+
+# ---------------------------------------------------------------- scratch
+scratch/
+tmp/
+temp/
+out/
+*.out
+*.tmp
+*.bak
+*.orig
+*.rej
+*~
+
+# ---------------------------------------------------------------- editors
+.vscode/
+.idea/
+*.iml
+*.code-workspace
+*.swp
+*.swo
+.claude/settings.local.json
+
+# ---------------------------------------------------------------- OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes

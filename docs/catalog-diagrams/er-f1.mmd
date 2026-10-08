@@ -1,0 +1,98 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_room_composition["facility.room_composition"] {
+    uuid parent_room_id PK, FK "→ org.room"
+    uuid part_room_id PK, FK "→ org.room"
+  }
+  t_custody["facility.custody"] {
+    uuid id PK
+    uuid room_id FK "→ org.room; optional"
+    uuid floor_id FK "→ org.floor; optional"
+    uuid building_id FK "→ org.building; optional"
+    uuid campus_id FK "→ org.campus; optional"
+    uuid org_unit_id FK "→ org.org_unit"
+    daterange valid
+    text note "optional"
+  }
+  t_space_allocation["facility.space_allocation"] {
+    uuid id PK
+    uuid room_id FK "→ org.room"
+    uuid org_unit_id FK "→ org.org_unit"
+    daterange valid
+    numeric share_pct
+    text note "optional"
+  }
+  t_room_reservation_rule["facility.room_reservation_rule"] {
+    uuid id PK
+    uuid room_id FK "→ org.room; optional"
+    uuid floor_id FK "→ org.floor; optional"
+    uuid building_id FK "→ org.building; optional"
+    int position_type_id FK "→ org.position_type; optional"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    int permission_id FK "→ authz.permission; optional"
+    uuid person_id FK "→ people.person; optional"
+    daterange valid
+    uuid granted_by_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+  }
+  t_hold_priority_rule["facility.hold_priority_rule"] {
+    uuid id PK
+    int hold_type_id FK "→ ref.hold_type"
+    int outranks_hold_type_id FK "→ ref.hold_type"
+    int room_type_id FK "→ ref.room_type; optional"
+    uuid org_unit_id FK "→ org.org_unit; optional"
+    daterange valid
+    text note "optional"
+  }
+  t_room_service_window["facility.room_service_window"] {
+    uuid id PK
+    uuid room_id FK "→ org.room"
+    int room_service_type_id FK "→ ref.room_service_type"
+    tsrange during
+    text note "optional"
+    uuid work_order_id FK "→ work_order; optional"
+    uuid created_by_account_id FK "→ iam.user_account"
+  }
+  t_blackout["facility.blackout"] {
+    uuid id PK
+    int room_type_id FK "→ ref.room_type; optional"
+    uuid building_id FK "→ org.building; optional"
+    tsrange during
+    text reason
+    uuid created_by_account_id FK "→ iam.user_account"
+  }
+  t_room_hold["facility.room_hold"] {
+    uuid id PK
+    uuid room_id FK "→ org.room; → exam.exam_room"
+    int hold_type_id FK "→ ref.hold_type"
+    tsrange during
+    int setup_minutes
+    int teardown_minutes
+    uuid timetable_entry_id FK "→ academic.timetable_entry; optional"
+    uuid class_session_id FK "→ academic.class_session; optional"
+    uuid exam_schedule_id FK "→ exam.exam_room; optional"
+    uuid viva_id FK "→ research.viva; optional"
+    uuid convocation_id FK "→ exam.convocation; optional"
+    uuid booking_occurrence_id FK "→ booking_occurrence; optional"
+    uuid guest_stay_id FK "→ guest_stay; optional"
+    uuid room_service_window_id FK "optional"
+    uuid parent_hold_id FK "optional"
+    bool is_active
+    uuid displaced_by_hold_id FK "optional"
+    timestamp displaced_at "optional"
+  }
+  t_room_hold |o--o{ t_room_hold : "displaced_by_hold_id"
+  t_room_hold |o--o{ t_room_hold : "parent_hold_id"
+  t_room_service_window |o--o{ t_room_hold : "room_service_window_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

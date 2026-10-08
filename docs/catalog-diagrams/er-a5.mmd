@@ -1,0 +1,94 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_term_registration["academic.term_registration"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid academic_term_id FK, UK "→ academic_term"
+    int term_no
+    int term_registration_status_id FK "→ ref.term_registration_status"
+    timestamp registered_at
+    uuid registered_by_employee_id FK "→ people.employee; optional"
+    int academic_standing_id FK "→ ref.academic_standing; optional"
+    uuid standing_decided_by_employee_id FK "→ people.employee; optional"
+    timestamp standing_decided_at "optional"
+    text standing_note "optional"
+  }
+  t_course_registration["academic.course_registration"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid course_offering_id FK, UK "→ course_offering"
+    int registration_status_id FK "→ ref.registration_status"
+    timestamp registered_at
+  }
+  t_elective_preference["academic.elective_preference"] {
+    uuid id PK
+    uuid student_enrollment_id FK, UK "→ student_enrollment"
+    uuid elective_basket_id FK, UK "→ elective_basket"
+    uuid academic_term_id FK, UK "→ academic_term"
+    uuid course_id FK, UK "→ course"
+    int priority UK
+    timestamp submitted_at
+  }
+  t_credit_overload_approval["academic.credit_overload_approval"] {
+    uuid student_enrollment_id PK, FK "→ student_enrollment"
+    uuid academic_term_id PK, FK "→ academic_term"
+    numeric max_credits
+    text reason
+    uuid approved_by_employee_id FK "→ people.employee"
+    timestamp approved_at
+  }
+  t_student_pathway["academic.student_pathway"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ student_enrollment"
+    uuid curriculum_pathway_id FK "→ curriculum_pathway"
+    daterange valid
+  }
+  t_class_session["academic.class_session"] {
+    uuid id PK
+    uuid timetable_entry_id FK, UK "→ timetable_entry; optional"
+    uuid teaching_assignment_id FK "→ teaching_assignment; optional"
+    date session_date UK
+    time start_time "optional"
+    time end_time "optional"
+    uuid room_id FK "→ org.room; optional"
+    int class_session_status_id FK "→ ref.class_session_status"
+    uuid substitute_employee_id FK "→ people.employee; optional"
+    text note "optional"
+  }
+  t_class_session_topic["academic.class_session_topic"] {
+    uuid id PK
+    uuid class_session_id FK
+    uuid lesson_plan_item_id FK "→ lesson_plan_item; optional"
+    text topic
+  }
+  t_attendance["academic.attendance"] {
+    uuid class_session_id PK, FK
+    uuid course_registration_id PK, FK
+    int attendance_status_id FK "→ ref.attendance_status"
+    uuid marked_by_employee_id FK "→ people.employee; optional"
+    timestamp marked_at
+  }
+  t_attendance_leave["academic.attendance_leave"] {
+    uuid id PK
+    uuid student_enrollment_id FK "→ student_enrollment"
+    int leave_type_id FK "→ ref.leave_type"
+    daterange period
+    text reason
+    uuid document_file_id FK "→ people.file_object; optional"
+    uuid instance_id FK, UK "→ wf.approval_instance"
+  }
+  t_class_session ||--o{ t_attendance : "class_session_id"
+  t_course_registration ||--o{ t_attendance : "course_registration_id"
+  t_class_session ||--o{ t_class_session_topic : "class_session_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

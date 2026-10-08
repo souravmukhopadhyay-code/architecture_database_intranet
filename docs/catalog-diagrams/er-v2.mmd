@@ -1,0 +1,73 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_data_principal_request["privacy.data_principal_request"] {
+    uuid id PK
+    uuid person_id FK "→ people.person"
+    int dpr_request_type_id FK "→ ref.dpr_request_type"
+    uuid submitted_by_person_id FK "→ people.person"
+    text details "optional"
+    timestamp submitted_at
+  }
+  t_dpr_request_event["privacy.dpr_request_event"] {
+    bigint id PK
+    uuid request_id FK
+    int dpr_status_id FK "→ ref.dpr_status"
+    uuid actor_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+    timestamp occurred_at
+  }
+  t_erasure_log["privacy.erasure_log"] {
+    bigint id PK
+    uuid person_id FK "→ people.person; optional"
+    int data_element_id FK "→ data_element"
+    int erasure_action_id FK "→ ref.erasure_action"
+    uuid request_id FK "optional"
+    uuid executed_by_account_id FK "→ iam.user_account; optional"
+    timestamp executed_at
+  }
+  t_breach_incident["privacy.breach_incident"] {
+    uuid id PK
+    text title
+    text description
+    int breach_severity_id FK "→ ref.breach_severity"
+    int breach_status_id FK "→ ref.breach_status"
+    timestamp occurred_from "optional"
+    timestamp detected_at
+    timestamp board_notified_at "optional"
+  }
+  t_breach_affected_person["privacy.breach_affected_person"] {
+    uuid incident_id PK, FK
+    uuid person_id PK, FK "→ people.person"
+  }
+  t_breach_notification["privacy.breach_notification"] {
+    uuid id PK
+    uuid incident_id FK
+    uuid person_id FK
+    int contact_channel_id FK "→ ref.contact_channel"
+    timestamp sent_at
+  }
+  t_pii_access_log["privacy.pii_access_log"] {
+    bigint id PK
+    timestamp accessed_at PK
+    uuid accessor_account_id FK "→ iam.user_account; optional"
+    uuid person_id FK "→ people.person; optional"
+    int data_category_id FK "→ ref.data_category"
+    int purpose_id FK "→ processing_purpose"
+    uuid request_id "optional"
+  }
+  t_breach_incident ||--o{ t_breach_affected_person : "incident_id"
+  t_breach_affected_person ||--o{ t_breach_notification : "incident_id, person_id"
+  t_data_principal_request ||--o{ t_dpr_request_event : "request_id"
+  t_data_principal_request |o--o{ t_erasure_log : "request_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

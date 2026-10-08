@@ -1,0 +1,116 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_vendor["facility.vendor"]:::hub {
+    uuid id PK
+    text name UK
+    uuid contact_person_id FK "→ people.person; optional"
+    text gstin "optional"
+    bool is_active
+  }
+  t_asset["facility.asset"]:::hub {
+    uuid id PK
+    text asset_tag UK
+    int asset_type_id FK "→ ref.asset_type"
+    text name
+    uuid room_id FK "→ org.room; optional"
+    uuid custodian_org_unit_id FK "→ org.org_unit"
+    bool is_portable
+    date purchased_on "optional"
+    numeric purchase_cost "optional"
+    date warranty_until "optional"
+    int asset_condition_id FK "→ ref.asset_condition"
+    bool is_active
+    date condemned_on "optional"
+  }
+  t_service_contract["facility.service_contract"] {
+    uuid id PK
+    uuid asset_id FK "optional"
+    int asset_type_id FK "→ ref.asset_type; optional"
+    uuid room_id FK "→ org.room; optional"
+    uuid vendor_id FK
+    text contract_ref
+    daterange valid
+    uuid file_object_id FK "→ people.file_object; optional"
+  }
+  t_booking_asset["facility.booking_asset"] {
+    uuid id PK
+    uuid booking_occurrence_id FK, UK "→ booking_occurrence"
+    uuid asset_id FK, UK
+  }
+  t_asset_loan["facility.asset_loan"] {
+    uuid id PK
+    uuid asset_id FK
+    uuid borrower_person_id FK "→ people.person"
+    uuid on_behalf_org_unit_id FK "→ org.org_unit; optional"
+    tsrange during
+    uuid issued_by_account_id FK "→ iam.user_account"
+    timestamp returned_at "optional"
+    uuid returned_to_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+  }
+  t_asset_hold["facility.asset_hold"] {
+    uuid id PK
+    uuid asset_id FK
+    tsrange during
+    uuid booking_asset_id FK "optional"
+    uuid asset_loan_id FK "optional"
+  }
+  t_maintenance_schedule["facility.maintenance_schedule"] {
+    uuid id PK
+    uuid asset_id FK "optional"
+    uuid room_id FK "→ org.room; optional"
+    int maintenance_type_id FK "→ ref.maintenance_type"
+    interval every
+    date last_done_on "optional"
+    uuid vendor_id FK "optional"
+    text note "optional"
+    bool is_active
+  }
+  t_work_order["facility.work_order"] {
+    uuid id PK
+    text wo_no UK
+    uuid room_id FK "→ org.room; optional"
+    uuid asset_id FK "optional"
+    int work_order_category_id FK "→ ref.work_order_category"
+    int work_order_priority_id FK "→ ref.work_order_priority"
+    uuid reported_by_person_id FK "→ people.person"
+    text description
+    timestamp reported_at
+    uuid assignee_employee_id FK "→ people.employee; optional"
+    uuid vendor_id FK "optional"
+    uuid maintenance_schedule_id FK "optional"
+    numeric cost "optional"
+  }
+  t_work_order_event["facility.work_order_event"] {
+    bigint id PK
+    uuid work_order_id FK, UK
+    int work_order_status_id FK "→ ref.work_order_status"
+    uuid actor_account_id FK "→ iam.user_account; optional"
+    text note "optional"
+    timestamp occurred_at UK
+  }
+  t_asset ||--o{ t_asset_hold : "asset_id"
+  t_asset_loan |o--o{ t_asset_hold : "asset_loan_id"
+  t_booking_asset |o--o{ t_asset_hold : "booking_asset_id"
+  t_asset ||--o{ t_asset_loan : "asset_id"
+  t_asset ||--o{ t_booking_asset : "asset_id"
+  t_asset |o--o{ t_maintenance_schedule : "asset_id"
+  t_vendor |o--o{ t_maintenance_schedule : "vendor_id"
+  t_asset |o--o{ t_service_contract : "asset_id"
+  t_vendor ||--o{ t_service_contract : "vendor_id"
+  t_asset |o--o{ t_work_order : "asset_id"
+  t_maintenance_schedule |o--o{ t_work_order : "maintenance_schedule_id"
+  t_vendor |o--o{ t_work_order : "vendor_id"
+  t_work_order ||--o{ t_work_order_event : "work_order_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px

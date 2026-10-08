@@ -1,0 +1,115 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#eef4ff"
+    primaryBorderColor: "#1d4ed8"
+    primaryTextColor: "#0b1b4a"
+    lineColor: "#64748b"
+    fontFamily: "Segoe UI, Arial, sans-serif"
+---
+
+erDiagram
+  direction TB
+  t_org_unit["org.org_unit"]:::hub {
+    uuid id PK
+    int org_unit_type_id FK "→ ref.org_unit_type"
+    uuid parent_id FK, UK "optional"
+    text code UK
+    text name UK
+    text short_name UK "optional"
+    text description "optional"
+    date established_on "optional"
+    bool is_active
+  }
+  t_org_unit_type_rule["org.org_unit_type_rule"] {
+    int parent_type_id PK, FK "→ ref.org_unit_type"
+    int child_type_id PK, FK "→ ref.org_unit_type"
+  }
+  t_org_unit_contact["org.org_unit_contact"] {
+    uuid id PK
+    uuid org_unit_id FK, UK
+    int contact_channel_id FK, UK "→ ref.contact_channel"
+    text value UK
+    bool is_primary
+  }
+  t_org_unit_location["org.org_unit_location"] {
+    uuid org_unit_id PK, FK
+    uuid building_id PK, FK
+    text office_room "optional"
+  }
+  t_position_type["org.position_type"] {
+    int id PK
+    text code UK
+    text label
+    bool is_active
+    int sort_order
+  }
+  t_position_type_unit_type["org.position_type_unit_type"] {
+    int position_type_id PK, FK
+    int org_unit_type_id PK, FK "→ ref.org_unit_type"
+  }
+  t_appointment["org.appointment"] {
+    uuid id PK
+    uuid org_unit_id FK
+    int position_type_id FK
+    uuid employee_id FK "→ people.employee"
+    daterange valid
+    text order_reference "optional"
+  }
+  t_campus["org.campus"] {
+    uuid id PK
+    text code UK
+    text name UK
+    int city_id FK "→ ref.city; optional"
+    bool is_active
+  }
+  t_building["org.building"]:::hub {
+    uuid id PK
+    uuid campus_id FK, UK
+    text code UK
+    text name UK
+    int building_kind_id FK "→ ref.building_kind"
+    bool is_active
+  }
+  t_floor["org.floor"] {
+    uuid id PK
+    uuid building_id FK, UK
+    text code UK
+    text name
+    int level UK
+    bool is_active
+  }
+  t_room["org.room"] {
+    uuid id PK
+    uuid building_id FK, UK
+    uuid floor_id FK "optional"
+    text code UK
+    text name "optional"
+    int room_type_id FK "→ ref.room_type"
+    int room_use_id FK "→ ref.room_use; optional"
+    int capacity
+    int chairs "optional"
+    int exam_capacity "optional"
+    numeric area_sqm "optional"
+    bool is_accessible
+    bool is_active
+  }
+  t_room_facility["org.room_facility"] {
+    uuid room_id PK, FK
+    int room_feature_id PK, FK "→ ref.room_feature"
+    int quantity
+  }
+  t_org_unit ||--o{ t_appointment : "org_unit_id"
+  t_position_type ||--o{ t_appointment : "position_type_id"
+  t_campus ||--o{ t_building : "campus_id"
+  t_building ||--o{ t_floor : "building_id"
+  t_org_unit |o--o{ t_org_unit : "parent_id"
+  t_org_unit ||--o{ t_org_unit_contact : "org_unit_id"
+  t_building ||--o{ t_org_unit_location : "building_id"
+  t_org_unit ||--o{ t_org_unit_location : "org_unit_id"
+  t_position_type ||--o{ t_position_type_unit_type : "position_type_id"
+  t_building ||--o{ t_room : "building_id"
+  t_floor |o--o{ t_room : "floor_id"
+  t_room ||--o{ t_room_facility : "room_id"
+  classDef hub fill:#fff6d6,stroke:#a16207,stroke-width:2px
